@@ -46,8 +46,8 @@ public class RequestManager {
     }
 
     public void sendPacket(Feature feature, RequestListener listener){
-        GolfzonLogger.e("[Request Feature] : "+ feature + " packet => " + feature.getReq());
-        addQueueReqeustPacket(feature.name(), feature.getReq(), new RequestListener() {
+        GolfzonLogger.e("[Request Feature] : "+ feature + " packet => " + feature.getReqMsg());
+        addQueueReqeustPacket(feature.name(), feature.getReqMsg(), new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = "+ feature +", callback = "+ listener +", getRequestThread() = " + requestThread);
@@ -56,7 +56,7 @@ public class RequestManager {
                     GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
                 }
             }
-        }, 3,feature.getTimeout());
+        }, 3,1000);
 
     }
 

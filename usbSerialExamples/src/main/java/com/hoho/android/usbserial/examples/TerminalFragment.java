@@ -252,7 +252,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 status("unsupport setparameters");
             }
             if(withIoManager) {
-                usbIoManager = new SerialInputOutputManager(usbSerialPort, this);
+                usbIoManager = new SerialInputOutputManager(usbSerialPort, requestManager.getResponseManager());
                 usbIoManager.start();
             }
             status("connected");

@@ -7,6 +7,8 @@ public class RequestManager {
 
     private RequestThread requestThread;
 
+    private ResponseManager responseManager;
+
     private UsbSerialPort usbSerialPort;
 
     public RequestManager() {
@@ -17,10 +19,14 @@ public class RequestManager {
         if (requestThread == null) {
             requestThread = new RequestThread(this);
         }
+
+        if(responseManager == null){
+            responseManager = new ResponseManager(requestThread);
+        }
     }
 
-    public RequestThread getRequestThread() {
-        return requestThread;
+    public ResponseManager getResponseManager() {
+        return responseManager;
     }
 
     public UsbSerialPort getUsbSerialPort() {

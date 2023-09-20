@@ -285,6 +285,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         } catch (IOException ignored) {}
         usbSerialPort = null;
         requestManager.setUsbSerialPort(null);
+        requestManager.getRequestThread().closeAll();
     }
 
     private void send(String str) {

@@ -3,10 +3,13 @@ package com.hoho.android.usbserial.core;
 import java.util.HashMap;
 
 public enum Feature {
-    REQ_AT_MODE("+++",""),
+    REQ_AT_MODE("+++","+++"),
     REQ_IS_MASTER("AT+UBTLE?\r\n","AT+UBTLE?"),
     REQ_SET_MASTER( "AT+UBTLE=1\r\n", "AT+UBTLE=1"),
     REQ_RESET("AT+CPWROFF\r\n","AT+CPWROFF"),
+    REQ_SCAN_DEVICE("AT+UBTD=4,1\r\n","AT+UBTD=4,1"),
+
+    REQ_SET_CONNECTED("AT+UDCP=sps://","AT+UDCP=sps://"),
     REQ_IS_CONNECTED("AT+UBTLE=1\r\n","AT+UBTLE=1");
 
 
@@ -17,7 +20,7 @@ public enum Feature {
         sFeatureMap = new HashMap<>(Feature.values().length);
 
         for(Feature type : Feature.values()){
-            sFeatureMap.put(type.name(),type);
+            sFeatureMap.put(type.resMsg,type);
         }
     }
 
@@ -38,5 +41,9 @@ public enum Feature {
 
     public String getResMsg() {
         return resMsg;
+    }
+
+    public static Feature byType(String key){
+        return sFeatureMap.get(key);
     }
 }

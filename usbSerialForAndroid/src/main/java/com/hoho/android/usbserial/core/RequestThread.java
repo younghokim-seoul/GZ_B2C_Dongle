@@ -3,6 +3,7 @@ package com.hoho.android.usbserial.core;
 import android.text.TextUtils;
 
 import com.hoho.android.usbserial.GolfzonLogger;
+import com.hoho.android.usbserial.util.HexDump;
 
 import java.util.LinkedList;
 
@@ -43,6 +44,7 @@ public class RequestThread {
     public void addRequestList(Request request) {
 
         GolfzonLogger.i(":::>>>addRequestList");
+
         synchronized (requestTypeList) {
             requestTypeList.add(request);
         }
@@ -71,8 +73,14 @@ public class RequestThread {
 
                         byte[] data = (packet + '\n').getBytes();
 
-                        requestManager.getUsbSerialPort().write(data,TIME_OUT);
+                        GolfzonLogger.i("Hex => " + HexDump.dumpHexString(data));
 
+                        requestManager.getUsbSerialPort().write(data,500);
+
+                        if(type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())){
+                            GolfzonLogger.i(":::>>>after request REQ_AT_MODE");
+                            success(null);
+                        }
 
                     }
                 }
@@ -197,7 +205,7 @@ public class RequestThread {
         GolfzonLogger.d("mSDKRequest : " + requestListener + "");
         if (requestListener != null) {
             if (ResultCode.REQUEST_TIMEOUT_ERROR == error) {
-                checkRetry();
+//                checkRetry();
             }
             requestListener.onResult(error, null);
         }

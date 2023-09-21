@@ -218,7 +218,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 spn.append(hgsNoti.toString()).append("\n");
                 GolfzonLogger.i(":::hgsNoti " +hgsNoti);
 //                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//                receiveText.append(spn);
+                receiveText.append(spn);
             }
         });
     }

@@ -9,7 +9,6 @@ import androidx.fragment.app.FragmentManager;
 
 import com.hoho.android.usbserial.GolfzonLogger;
 
-import co.golfzon.visionHome.core.HGS_ClientManager;
 import co.golfzon.visionHome.core.interfaces.HGS_Client;
 
 
@@ -18,20 +17,21 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     private HGS_Client hgsClient;
 
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+  protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         GolfzonLogger.i("::::MainActivity onCreate");
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+
         if (savedInstanceState == null)
             getSupportFragmentManager().beginTransaction().add(R.id.fragment, new DevicesFragment(), "devices").commit();
         else
             onBackStackChanged();
-
-
 
     }
 

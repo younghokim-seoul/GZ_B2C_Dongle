@@ -187,6 +187,11 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
         hgsClient.setHSGSSensorListener(new HGSSensorListener() {
             @Override
+            public void onSendDeviceCmd(@NonNull String s) {
+                send(s);
+            }
+
+            @Override
             public void onReceiveData(@NonNull SwingInfoGyro swingInfoGyro) {
                 SpannableStringBuilder spn = new SpannableStringBuilder();
                 spn.append(swingInfoGyro.toString());

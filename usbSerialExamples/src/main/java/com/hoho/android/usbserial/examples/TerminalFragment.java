@@ -22,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -44,6 +45,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
 
+import co.golfzon.visionHome.HGSNoti;
+import co.golfzon.visionHome.HGSSensorListener;
+import co.golfzon.visionHome.SwingInfoGyro;
+import co.golfzon.visionHome.core.HGS_ClientManager;
+import co.golfzon.visionHome.core.interfaces.HGS_Client;
+
+
 public class TerminalFragment extends Fragment implements SerialInputOutputManager.Listener {
 
     private enum UsbPermission { Unknown, Requested, Granted, Denied }
@@ -60,12 +68,20 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private TextView receiveText;
     private ControlLines controlLines;
 
+    private Button initButton;
+    private Button sensingButton;
+
     private SerialInputOutputManager usbIoManager;
     private UsbSerialPort usbSerialPort;
     private UsbPermission usbPermission = UsbPermission.Unknown;
     private boolean connected = false;
 
     private RequestManager requestManager;
+
+
+    private HGS_Client hgsClient;
+
+
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -79,6 +95,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             }
         };
         mainLooper = new Handler(Looper.getMainLooper());
+
     }
 
     /*
@@ -94,6 +111,11 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         baudRate = getArguments().getInt("baud");
         withIoManager = getArguments().getBoolean("withIoManager");
 
+        GolfzonLogger.i(":::::::Terminal.... create");
+
+
+
+        hgsClient = HGS_ClientManager.getInstance().create(requireContext());
 
         requestManager = new RequestManager();
         requestManager.init();
@@ -138,6 +160,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             receiveBtn.setOnClickListener(v -> read());
         }
 
+        initButton = view.findViewById(R.id.btn_init);
+        sensingButton = view.findViewById(R.id.btn_sensing);
+
         return view;
     }
 
@@ -145,6 +170,38 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+        initButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hgsClient.HGSInitSensor();
+            }
+        });
+
+        sensingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hgsClient.HGSSensingStart();
+            }
+        });
+
+        hgsClient.setHSGSSensorListener(new HGSSensorListener() {
+            @Override
+            public void onReceiveData(@NonNull SwingInfoGyro swingInfoGyro) {
+                SpannableStringBuilder spn = new SpannableStringBuilder();
+                spn.append(swingInfoGyro.toString());
+                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                receiveText.append(spn);
+            }
+
+            @Override
+            public void onReceiveEvent(@NonNull HGSNoti hgsNoti) {
+                SpannableStringBuilder spn = new SpannableStringBuilder();
+                spn.append(hgsNoti.toString());
+                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                receiveText.append(spn);
+            }
+        });
     }
 
     @Override

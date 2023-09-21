@@ -35,6 +35,10 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private String macAddress = "";
 
+
+
+
+
     public ResponseManager(
             RequestManager requestManager,
             RequestThread requestThread
@@ -52,6 +56,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
                 scanDeviceList.add(data);
                 return;
             }
+
+            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
             String receivceData = HexDump.dumpHexString(data);
             GolfzonLogger.i("receivceData " +receivceData);
             String[] serialData = parseSerialData(data);
@@ -111,7 +117,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
                     },10000);
                     break;
                 case REQ_SET_CONNECTED:
-                    GolfzonLogger.i("BLE MAC 어드레스 접속 시도");
+                    GolfzonLogger.i("BLE MAC 어드레스 접속 시도 ");
 
                     break;
                 default:

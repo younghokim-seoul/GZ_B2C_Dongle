@@ -17,4 +17,15 @@ public class Request {
         this.maxCount = maxCount;
         this.listener = listener;
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "type='" + type + '\'' +
+                ", packet='" + packet + '\'' +
+                ", timeout=" + timeout +
+                ", maxCount=" + maxCount +
+                ", listener=" + listener +
+                '}';
+    }
 }

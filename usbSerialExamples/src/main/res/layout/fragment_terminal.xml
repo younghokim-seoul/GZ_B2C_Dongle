@@ -75,6 +75,18 @@
             android:textOff="RI"
             android:textOn="RI" />
 
+        <Button
+            android:id="@+id/btn_init"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="init"/>
+
+        <Button
+            android:id="@+id/btn_sensing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sensing"/>
+
     </LinearLayout>
 
     <View

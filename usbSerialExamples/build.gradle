@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application'
+
+
 }
 
 android {
@@ -16,6 +18,7 @@ android {
         vectorDrawables.useSupportLibrary = true
 
         missingDimensionStrategy 'device', 'anyDevice'
+
     }
 
     buildTypes {
@@ -27,7 +30,11 @@ android {
 }
 
 dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation files('libs/hgs_android_sdk_release_1.0.9.jar')
+
     implementation project(':usbSerialForAndroid')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.4'
 }

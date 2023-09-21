@@ -2,13 +2,21 @@ package com.hoho.android.usbserial.examples;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.fragment.app.FragmentManager;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
 
 import com.hoho.android.usbserial.GolfzonLogger;
 
+import co.golfzon.visionHome.core.HGS_ClientManager;
+import co.golfzon.visionHome.core.interfaces.HGS_Client;
+
+
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
+
+
+    private HGS_Client hgsClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,11 +30,14 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             getSupportFragmentManager().beginTransaction().add(R.id.fragment, new DevicesFragment(), "devices").commit();
         else
             onBackStackChanged();
+
+
+
     }
 
     @Override
     public void onBackStackChanged() {
-        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount()>0);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(getSupportFragmentManager().getBackStackEntryCount() > 0);
     }
 
     @Override
@@ -37,10 +48,9 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     @Override
     protected void onNewIntent(Intent intent) {
-        if("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction())) {
-            TerminalFragment terminal = (TerminalFragment)getSupportFragmentManager().findFragmentByTag("terminal");
-            if (terminal != null)
-                terminal.status("USB device detected");
+        if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.getAction())) {
+            TerminalFragment terminal = (TerminalFragment) getSupportFragmentManager().findFragmentByTag("terminal");
+            if (terminal != null) terminal.status("USB device detected");
         }
         super.onNewIntent(intent);
     }

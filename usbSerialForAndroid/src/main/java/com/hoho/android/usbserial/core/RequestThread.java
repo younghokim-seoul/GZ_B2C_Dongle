@@ -41,6 +41,10 @@ public class RequestThread {
     }
 
 
+    public LinkedList<Request> getRequestTypeList() {
+        return requestTypeList;
+    }
+
     public void addRequestList(Request request) {
 
         GolfzonLogger.i(":::>>>addRequestList");

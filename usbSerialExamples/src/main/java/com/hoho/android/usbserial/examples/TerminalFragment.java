@@ -42,6 +42,7 @@ import com.hoho.android.usbserial.util.HexDump;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.EnumSet;
 
@@ -70,6 +71,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
     private Button initButton;
     private Button sensingButton;
+
+    private Button dtActiveButton;
 
     private SerialInputOutputManager usbIoManager;
     private UsbSerialPort usbSerialPort;
@@ -163,6 +166,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         initButton = view.findViewById(R.id.btn_init);
         sensingButton = view.findViewById(R.id.btn_sensing);
 
+        dtActiveButton = view.findViewById(R.id.btn_dt_mode);
+
         return view;
     }
 
@@ -171,6 +176,13 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         super.onViewCreated(view, savedInstanceState);
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
+
+        dtActiveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                send("ATO1" +"\r\n");
+            }
+        });
         initButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -188,23 +200,25 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         hgsClient.setHSGSSensorListener(new HGSSensorListener() {
             @Override
             public void onSendDeviceCmd(@NonNull String s) {
-                send(s);
+                GolfzonLogger.i("::::onSendDeviceCmd " + s);
+                send(s +"\r\n");
             }
 
             @Override
             public void onReceiveData(@NonNull SwingInfoGyro swingInfoGyro) {
                 SpannableStringBuilder spn = new SpannableStringBuilder();
-                spn.append(swingInfoGyro.toString());
-                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spn.append(swingInfoGyro.toString()).append("\n");
+//                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 receiveText.append(spn);
             }
 
             @Override
             public void onReceiveEvent(@NonNull HGSNoti hgsNoti) {
                 SpannableStringBuilder spn = new SpannableStringBuilder();
-                spn.append(hgsNoti.toString());
-                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                receiveText.append(spn);
+                spn.append(hgsNoti.toString()).append("\n");
+                GolfzonLogger.i(":::hgsNoti " +hgsNoti);
+//                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                receiveText.append(spn);
             }
         });
     }
@@ -356,13 +370,13 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             return;
         }
         try {
-        byte[] data = (str + '\n').getBytes();
-            SpannableStringBuilder spn = new SpannableStringBuilder();
-            spn.append("send " + data.length + " bytes\n");
-            spn.append(HexDump.dumpHexString(data)).append("\n");
-            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            receiveText.append(spn);
-            usbSerialPort.write(data, WRITE_WAIT_MILLIS);
+//        byte[] data = (str + '\n').getBytes();
+//            SpannableStringBuilder spn = new SpannableStringBuilder();
+//            spn.append("send " + data.length + " bytes\n");
+//            spn.append(HexDump.dumpHexString(data)).append("\n");
+//            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//            receiveText.append(spn);
+            usbSerialPort.write(str.getBytes(Charset.defaultCharset()), WRITE_WAIT_MILLIS);
         } catch (Exception e) {
             onRunError(e);
         }

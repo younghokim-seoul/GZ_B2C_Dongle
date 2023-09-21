@@ -118,10 +118,11 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
                     break;
                 case REQ_SET_CONNECTED:
                     GolfzonLogger.i("BLE MAC 어드레스 접속 시도 ");
-
                     break;
                 default:
+                    GolfzonLogger.i("::::데이티? " + new String(data));
                     break;
+
             }
 
         } catch (Exception e) {

@@ -95,9 +95,7 @@ public class RequestThread {
     }
 
     public void checkRetry() {
-        GolfzonLogger.e("checkRetry>>>>>>>>>>>>>>>>>>");
         if (requestManager != null) {
-            GolfzonLogger.e("");
             try {
                 if (requestTypeList.size() > 0) {
                     GolfzonLogger.d("thread is running, retry count -> " + RETRY_COUNT + ", Max count -> " + MAX_COUNT + ", type : " + requestTypeList.get(0).type);
@@ -108,13 +106,11 @@ public class RequestThread {
         }
 
 
-        GolfzonLogger.e("");
-        remove();
-        GolfzonLogger.e("");
-        if (requestTypeList.size() > 0) {
 
+        remove();
+
+        if (requestTypeList.size() > 0) {
             RETRY_COUNT = 0;
-            GolfzonLogger.i("checkRetry, threads :" + threads);
             if (threads != null && threads.isAlive()) {
                 synchronized (this.threads) {
                     if (threads.getState() == Thread.State.TIMED_WAITING || threads.getState() == Thread.State.WAITING) {
@@ -130,7 +126,6 @@ public class RequestThread {
                 }
             }
         } else {
-            GolfzonLogger.e("checkRetry ----> close");
             close();
         }
 
@@ -190,7 +185,6 @@ public class RequestThread {
     }
 
     private void remove() {
-        GolfzonLogger.i("remove()");
         RETRY_COUNT = 0;
         synchronized (requestTypeList) {
             if (!requestTypeList.isEmpty()) {

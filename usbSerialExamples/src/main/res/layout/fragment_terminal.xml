@@ -87,6 +87,12 @@
             android:layout_height="wrap_content"
             android:text="sensing"/>
 
+        <Button
+            android:id="@+id/btn_dt_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="dtMode"/>
+
     </LinearLayout>
 
     <View

@@ -10,6 +10,9 @@ public class Request {
     RequestListener listener;
 
 
+
+
+
     public Request(String type, String packet, int timeout, int maxCount, RequestListener listener) {
         this.type = type;
         this.packet = packet;

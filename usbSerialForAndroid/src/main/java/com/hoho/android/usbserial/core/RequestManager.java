@@ -80,7 +80,7 @@ public class RequestManager {
                                 requestThread.checkRetry();
                             }
                         }
-                    }, 3, 1500);
+                    }, 0, 1000);
                 }
             }
         }, 3, 1500);

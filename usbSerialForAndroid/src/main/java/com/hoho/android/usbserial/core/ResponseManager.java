@@ -28,6 +28,9 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private String macAddress = "";
 
+    private boolean isAtMode = false;
+    private boolean isDtMode = false;
+
 
 
 
@@ -48,8 +51,15 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
             GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
             String receivceData = HexDump.dumpHexString(data);
             GolfzonLogger.i("receivceData " +new String(receivceData));
+            Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
+
+
             packetBuffer.add(data);
-            checkResponseThread.start();
+            checkResponseThread.start(request);
+
+
+
+
 
 //            if(isScanning){
 //                scanDeviceList.add(data);

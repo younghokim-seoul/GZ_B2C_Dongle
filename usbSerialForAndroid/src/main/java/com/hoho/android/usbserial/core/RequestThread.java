@@ -77,7 +77,7 @@ public class RequestThread {
 
                         byte[] data = (packet + '\n').getBytes();
 
-                        GolfzonLogger.i("Hex => " + HexDump.dumpHexString(data));
+//                        GolfzonLogger.i("Hex => " + HexDump.dumpHexString(data));
 
                         requestManager.getUsbSerialPort().write(data,500);
 

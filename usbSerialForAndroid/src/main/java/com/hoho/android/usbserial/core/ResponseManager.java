@@ -1,38 +1,25 @@
 package com.hoho.android.usbserial.core;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.util.HexDump;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private RequestThread requestThread;
     private RequestManager requestManager;
 
-    private CheckResponseThread checkResponseThread;
+    private PacketCheckThread packetCheckThread;
 
     private List<byte[]> packetBuffer = new ArrayList<>();
-
-    private boolean isScanning = false;
-    private long scanTime = 5000;
-
-    private Handler handler = new Handler(Looper.getMainLooper());
 
     private String macAddress = "";
 
     private boolean isAtMode = false;
     private boolean isDtMode = false;
-
-
-
 
 
     public ResponseManager(
@@ -41,7 +28,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
     ) {
         this.requestManager = requestManager;
         this.requestThread = requestThread;
-        this.checkResponseThread = new CheckResponseThread(this);
+        this.packetCheckThread = new PacketCheckThread(this);
     }
 
     @Override
@@ -50,14 +37,13 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         try {
             GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
             String receivceData = HexDump.dumpHexString(data);
-            GolfzonLogger.i("receivceData " +new String(receivceData));
+            GolfzonLogger.i("receivceData " + new String(receivceData));
             Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
-
-            packetBuffer.add(data);
-            checkResponseThread.start(request);
-
-
+            if (!request.type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())) {
+                packetBuffer.add(data);
+                packetCheckThread.start(request);
+            }
 
 
 
@@ -163,5 +149,9 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     public List<byte[]> getPacketBuffer() {
         return packetBuffer;
+    }
+
+    public void bufferClear() {
+        packetBuffer.clear();
     }
 }

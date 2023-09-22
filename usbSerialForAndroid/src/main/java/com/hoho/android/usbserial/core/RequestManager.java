@@ -8,7 +8,6 @@ public class RequestManager {
     private RequestThread requestThread;
 
     private ResponseManager responseManager;
-    private CheckResponseThread checkResponseThread;
 
     private UsbSerialPort usbSerialPort;
 
@@ -21,7 +20,6 @@ public class RequestManager {
         if (requestThread == null) {
             requestThread = new RequestThread(this);
         }
-
 
 
         if (responseManager == null) {
@@ -46,69 +44,88 @@ public class RequestManager {
         return requestThread;
     }
 
-    private void addQueueReqeustPacket(String type, String packet, RequestListener listener, int retryCount, int... timeout) {
+    private void addQueueReqeustPacket(String type, String packet, RequestListener requestListener, PacketCheckListener packetCheckListener, int retryCount, int... timeout) {
         GolfzonLogger.e(">>>>>>main = " + type);
         GolfzonLogger.e(">>>>>>sub = " + packet);
 
         if (packet == null) {
-            listener.onResult(ResultCode.FAIL, null);
+            requestListener.onResult(ResultCode.FAIL, null);
             return;
         }
 
-        requestThread.addRequestList(new Request(type, packet, timeout[0], retryCount, listener));
+
+        requestThread.addRequestList(new Request(type, packet, timeout[0], retryCount, requestListener, packetCheckListener));
         requestThread.start();
     }
 
-    public void sendPacket(Feature feature, RequestListener listener) {
+
+    public void setAtMode(Feature feature) {
         GolfzonLogger.e("[Request Feature] : " + feature + " packet => " + feature.getReqMsg());
-        addQueueReqeustPacket(feature.name(), feature.getReqMsg(), new RequestListener() {
-            @Override
-            public void onResult(int result, Object object) {
-                GolfzonLogger.e("feature = " + feature + ", callback = " + listener + ", getRequestThread() = " + requestThread);
-
-                if (requestThread != null) {
-                    GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-                    requestThread.checkRetry();
-
-                    addQueueReqeustPacket(Feature.REQ_IS_MASTER.name(), Feature.REQ_IS_MASTER.getReqMsg(), new RequestListener() {
-                        @Override
-                        public void onResult(int result, Object object) {
-                            GolfzonLogger.e("feature = REQ_IS_MASTER" + ", callback = " + listener + ", getRequestThread() = " + requestThread);
-
-                            if (requestThread != null) {
-                                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-                                requestThread.checkRetry();
-                            }
-                        }
-                    }, 0, 1000);
-                }
+        addQueueReqeustPacket(feature.name(), feature.getReqMsg(), (result, object) -> {
+            if (requestThread != null) {
+                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+                requestThread.checkRetry();
+                isMasterCheck();
             }
-        }, 3, 1500);
+        }, null, 3, 1000);
 
     }
 
 
-    public void isConnected() {
-        addQueueReqeustPacket(Feature.REQ_IS_CONNECTED.name(), Feature.REQ_IS_CONNECTED.getReqMsg(), new RequestListener() {
-            @Override
-            public void onResult(int result, Object object) {
+    public void isMasterCheck() {
+        addQueueReqeustPacket(Feature.REQ_IS_MASTER.name(), Feature.REQ_IS_MASTER.getReqMsg(), (result, object) -> {
+            if (requestThread != null) {
+                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+                requestThread.checkRetry();
+            }
+        }, (result, object) -> {
+
+            if(result == ResultCode.SUCCESS){
+
+            }else{
+
+            }
+
+        }, 0, 1000);
+    }
+
+
+    public void setScanDevice() {
+        addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
 //                GolfzonLogger.e("feature = REQ_IS_CONNECTED" +", callback = "+ listener +", getRequestThread() = " + requestThread);
 //
 //                if(requestThread != null){
 //                    GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
 //                    requestThread.checkRetry();
 //                }
-            }
+        }, (result, object) -> {
+
         }, 3, 500);
     }
 
-    public void connect(String address) {
+
+    public void isConnected() {
+        addQueueReqeustPacket(Feature.REQ_IS_CONNECTED.name(), Feature.REQ_IS_CONNECTED.getReqMsg(), (result, object) -> {
+//                GolfzonLogger.e("feature = REQ_IS_CONNECTED" +", callback = "+ listener +", getRequestThread() = " + requestThread);
+//
+//                if(requestThread != null){
+//                    GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+//                    requestThread.checkRetry();
+//                }
+        }, (result, object) -> {
+
+        }, 3, 500);
+    }
+
+    public void setConnect(String address) {
         addQueueReqeustPacket(Feature.REQ_SET_CONNECTED.name(), Feature.REQ_SET_CONNECTED.getReqMsg() + address, new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = REQ_SET_CONNECTED");
 
             }
+        }, (result, object) -> {
+
         }, 3, 100000);
     }
 

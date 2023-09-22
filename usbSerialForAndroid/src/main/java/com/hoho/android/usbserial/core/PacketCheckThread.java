@@ -3,9 +3,8 @@ package com.hoho.android.usbserial.core;
 import com.hoho.android.usbserial.GolfzonLogger;
 
 import java.util.List;
-import java.util.function.Consumer;
 
-public class CheckResponseThread {
+public class PacketCheckThread {
 
     private PoolWorker threads;
 
@@ -13,11 +12,13 @@ public class CheckResponseThread {
 
     private Request request;
 
+    private PacketCheckListener listener;
 
 
 
 
-    public CheckResponseThread(ResponseManager responseManager) {
+
+    public PacketCheckThread(ResponseManager responseManager) {
         this.responseManager = responseManager;
     }
 
@@ -40,6 +41,7 @@ public class CheckResponseThread {
 
 
             if (threads != null) {
+                responseManager.bufferClear();
                 threads.setStart(false);
                 GolfzonLogger.i("interrrupt");
                 threads.interrupt();
@@ -56,20 +58,16 @@ public class CheckResponseThread {
     }
 
 
-//    public void success(Object item) {
-//        GolfzonLogger.i("success(), callback : " + requestListener);
-//        if (requestListener != null) requestListener.onResult(ResultCode.SUCCESS, item);
-//    }
-//
-//    public void fail(int error) {
-//        GolfzonLogger.d("mSDKRequest : " + requestListener + "");
-//        if (requestListener != null) {
-//            if (ResultCode.REQUEST_TIMEOUT_ERROR == error) {
-////                checkRetry();
-//            }
-//            requestListener.onResult(error, null);
-//        }
-//    }
+    public void success(Object item) {
+
+        if (listener != null) listener.onResult(ResultCode.SUCCESS, item);
+    }
+
+    public void fail() {
+        if (listener != null) {
+            listener.onResult(ResultCode.FAIL, null);
+        }
+    }
 
 
 
@@ -85,6 +83,7 @@ public class CheckResponseThread {
             isStart = is;
         }
 
+
         @Override
         public void run() {
             GolfzonLogger.e(":isStart = " + isStart + " request " + request);
@@ -92,29 +91,38 @@ public class CheckResponseThread {
                 synchronized (this) {
                     try {
                         GolfzonLogger.e("thread 테스트...");
+
+                        listener = request.packetCheckListener;
+
                         List<byte[]> packetItems  = responseManager.getPacketBuffer();
 
                         packetItems.forEach(bytes -> packetStr += new String(bytes));
 
                         GolfzonLogger.e("before packetStr => " + packetStr);
 
-
-
                         String filterNewLine = packetStr.replaceAll("(\r\n|\r|\n|\n\r)", "");
+
                         GolfzonLogger.i("filterNewLine => " + filterNewLine);
 
-                        String response = filterNewLine.substring(filterNewLine.length() -2);
 
-                        GolfzonLogger.e("response => " + response);
-
-                        if(response.equalsIgnoreCase("ok")){
-                            GolfzonLogger.e("ok Filter");
+                        //실시간 체크....
+                        if(isCheckSum(filterNewLine)){
+                            success(null);
                             close();
                         }
 
                         wait(request.timeout / 2);
 
-                        GolfzonLogger.e("after packetStr => " + packetStr);
+                        // wait 후... 재검사..
+
+                        GolfzonLogger.e("after packetStr => " + filterNewLine);
+
+                        if(isCheckSum(filterNewLine)){
+                            //마지노선 이후.. 들어왔다면?
+                            success(null);
+                        }else{
+                            fail();
+                        }
                         close();
                     } catch (InterruptedException e) {
                         GolfzonLogger.i("InterruptedException, isStart : " + isStart);
@@ -132,6 +140,17 @@ public class CheckResponseThread {
                 GolfzonLogger.i("Request Thread is dead.");
             }
 
+        }
+
+        private boolean isCheckSum(String filterNewLine){
+            String response = filterNewLine.substring(filterNewLine.length() -2);
+
+            if(response.equalsIgnoreCase("ok")){
+                GolfzonLogger.e("ok Filter");
+                return true;
+            }else{
+                return false;
+            }
         }
     }
 

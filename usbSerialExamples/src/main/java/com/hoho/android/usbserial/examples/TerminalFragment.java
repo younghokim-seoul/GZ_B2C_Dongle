@@ -336,12 +336,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             controlLines.start();
 
             requestManager.setUsbSerialPort(usbSerialPort);
-            requestManager.sendPacket(Feature.REQ_AT_MODE, new RequestListener() {
-                @Override
-                public void onResult(int result, Object object) {
+            requestManager.setAtMode(Feature.REQ_AT_MODE);
 
-                }
-            });
         } catch (Exception e) {
             status("connection failed: " + e.getMessage());
             disconnect();

@@ -63,7 +63,7 @@ public class RequestThread {
                     if (!requestTypeList.isEmpty()) {
                         String type = requestTypeList.get(0).type;
                         String packet = requestTypeList.get(0).packet;
-                        requestListener = requestTypeList.get(0).listener;
+                        requestListener = requestTypeList.get(0).requestListener;
                         MAX_COUNT = requestTypeList.get(0).maxCount;
                         WAIT_TIME_OUT = requestTypeList.get(0).timeout;
 
@@ -77,7 +77,6 @@ public class RequestThread {
 
                         byte[] data = (packet + '\n').getBytes();
 
-//                        GolfzonLogger.i("Hex => " + HexDump.dumpHexString(data));
 
                         requestManager.getUsbSerialPort().write(data,500);
 

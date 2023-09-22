@@ -11,9 +11,7 @@ public class RequestManager {
 
     private UsbSerialPort usbSerialPort;
 
-    public RequestManager() {
 
-    }
 
     public void init() {
 
@@ -47,7 +45,8 @@ public class RequestManager {
     private void addQueueReqeustPacket(String type, String packet, RequestListener requestListener, PacketCheckListener packetCheckListener, int retryCount, int... timeout) {
         GolfzonLogger.e(">>>>>>main = " + type);
         GolfzonLogger.e(">>>>>>sub = " + packet);
-
+        GolfzonLogger.e(">>>>>>timeout  = " + timeout[0]);
+        GolfzonLogger.e(">>>>>>retryCount  = " + retryCount);
         if (packet == null) {
             requestListener.onResult(ResultCode.FAIL, null);
             return;
@@ -74,47 +73,63 @@ public class RequestManager {
 
     public void isMasterCheck() {
         addQueueReqeustPacket(Feature.REQ_IS_MASTER.name(), Feature.REQ_IS_MASTER.getReqMsg(), (result, object) -> {
-            if (requestThread != null) {
-                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+
+        }, (result, object) -> {
+            if(result == ResultCode.SUCCESS){
+                requestThread.checkRetry();
+                getResponseManager().getPacketCheckThread().close();
+                setScanDevice();
+            }else{
                 requestThread.checkRetry();
             }
-        }, (result, object) -> {
 
-            if(result == ResultCode.SUCCESS){
-
-            }else{
-
-            }
-
-        }, 0, 1000);
+        }, 3, 1000);
     }
 
 
     public void setScanDevice() {
-        addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
-//                GolfzonLogger.e("feature = REQ_IS_CONNECTED" +", callback = "+ listener +", getRequestThread() = " + requestThread);
-//
-//                if(requestThread != null){
-//                    GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-//                    requestThread.checkRetry();
-//                }
-        }, (result, object) -> {
 
-        }, 3, 500);
+        getResponseManager().getPacketCheckThread().close();
+        addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
+                GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
+
+        }, (result, object) -> {
+            GolfzonLogger.i("::::::setScanDevice result = >  " + result);
+            if(result == ResultCode.SUCCESS){
+                String sb = (String) object;
+                requestThread.checkRetry();
+                getResponseManager().getPacketCheckThread().close();
+
+                setConnect("C8C7B9F67698r");
+
+            }else{
+                requestThread.checkRetry();
+            }
+        }, 1, 10000);
     }
 
 
     public void isConnected() {
-        addQueueReqeustPacket(Feature.REQ_IS_CONNECTED.name(), Feature.REQ_IS_CONNECTED.getReqMsg(), (result, object) -> {
-//                GolfzonLogger.e("feature = REQ_IS_CONNECTED" +", callback = "+ listener +", getRequestThread() = " + requestThread);
-//
-//                if(requestThread != null){
-//                    GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-//                    requestThread.checkRetry();
-//                }
-        }, (result, object) -> {
+        addQueueReqeustPacket(Feature.REQ_AT_MODE.name(), Feature.REQ_AT_MODE.getReqMsg(), (result, object) -> {
+            if (requestThread != null) {
+                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+                requestThread.checkRetry();
 
-        }, 3, 500);
+                addQueueReqeustPacket(Feature.REQ_IS_CONNECTED.name(), Feature.REQ_IS_CONNECTED.getReqMsg(), new RequestListener() {
+                    @Override
+                    public void onResult(int result, Object object) {
+
+
+                    }
+                }, new PacketCheckListener() {
+                    @Override
+                    public void onResult(int result, Object object) {
+                        requestThread.checkRetry();
+                        getResponseManager().getPacketCheckThread().close();
+                    }
+                } , 1, 500);
+            }
+        }, null, 3, 1000);
     }
 
     public void setConnect(String address) {
@@ -125,8 +140,25 @@ public class RequestManager {
 
             }
         }, (result, object) -> {
+            requestThread.checkRetry();
+            getResponseManager().getPacketCheckThread().close();
+            setATtoDT();
+        }, 3, 20000);
+    }
 
-        }, 3, 100000);
+    public void setATtoDT(){
+        addQueueReqeustPacket(Feature.REQ_DT_MODE.name(), Feature.REQ_DT_MODE.getReqMsg(), new RequestListener() {
+            @Override
+            public void onResult(int result, Object object) {
+                GolfzonLogger.e("feature = REQ_DT_MODE");
+
+
+            }
+        }, (result, object) -> {
+            requestThread.checkRetry();
+            getResponseManager().getPacketCheckThread().close();
+            getResponseManager().setDtMode(true);
+        }, 3, 1000);
     }
 
 

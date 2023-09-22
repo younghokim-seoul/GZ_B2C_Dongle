@@ -6,7 +6,7 @@ import java.util.List;
 
 public class PacketCheckThread {
 
-    private PoolWorker threads;
+    private TestWorker threads;
 
     private ResponseManager responseManager;
 
@@ -23,11 +23,11 @@ public class PacketCheckThread {
     }
 
     public synchronized void start(Request request) {
-        GolfzonLogger.d("threads : " + threads);
+        GolfzonLogger.d("PacketCheckThread threads : " + threads);
         if (threads == null) {
             GolfzonLogger.d("response Check Thread start");
             this.request = request;
-            threads = new PoolWorker("GZTimer:#");
+            threads = new TestWorker("GZTimer:#");
             threads.setStart(true);
             synchronized (this.threads) {
                 threads.start();
@@ -35,16 +35,18 @@ public class PacketCheckThread {
         }
     }
 
+
+
     public void close() {
         GolfzonLogger.i("close");
         try {
-
 
             if (threads != null) {
                 responseManager.bufferClear();
                 threads.setStart(false);
                 GolfzonLogger.i("interrrupt");
                 threads.interrupt();
+                GolfzonLogger.i(":::::: threads" + threads.isAlive());
             } else {
                 GolfzonLogger.i("threads is null");
             }
@@ -52,6 +54,7 @@ public class PacketCheckThread {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            GolfzonLogger.e("::::쓰레드 죽엇나?");
             threads = null;
             request = null;
         }
@@ -71,11 +74,13 @@ public class PacketCheckThread {
 
 
 
-    private class PoolWorker extends Thread {
+
+
+    private class TestWorker extends Thread {
         private boolean isStart;
         private String packetStr ="";
 
-        public PoolWorker(String threadName) {
+        public TestWorker(String threadName) {
             super(threadName);
         }
 
@@ -88,7 +93,9 @@ public class PacketCheckThread {
         public void run() {
             GolfzonLogger.e(":isStart = " + isStart + " request " + request);
             while (isStart) {
-                synchronized (this) {
+
+                synchronized (this){
+
                     try {
                         GolfzonLogger.e("thread 테스트...");
 
@@ -100,29 +107,42 @@ public class PacketCheckThread {
 
                         GolfzonLogger.e("before packetStr => " + packetStr);
 
-                        String filterNewLine = packetStr.replaceAll("(\r\n|\r|\n|\n\r)", "");
+                        String filterNewLine = filterString(packetStr);
 
-                        GolfzonLogger.i("filterNewLine => " + filterNewLine);
-
+                        GolfzonLogger.e("before filterNewLine => " + filterNewLine);
 
                         //실시간 체크....
                         if(isCheckSum(filterNewLine)){
-                            success(null);
+                            success(filterNewLine);
                             close();
                         }
+                        GolfzonLogger.i("wait Time = " + request.timeout);
 
-                        wait(request.timeout / 2);
+
+                        wait(request.timeout);
 
                         // wait 후... 재검사..
 
-                        GolfzonLogger.e("after packetStr => " + filterNewLine);
 
-                        if(isCheckSum(filterNewLine)){
+                        packetStr = "";
+
+                        List<byte[]> afterBuffer  = responseManager.getPacketBuffer();
+
+                        afterBuffer.forEach(bytes -> packetStr += new String(bytes));
+
+                        GolfzonLogger.e("after packetStr => " + packetStr);
+
+                        String lastPacket = filterString(packetStr);
+
+
+
+                        if(isCheckSum(lastPacket)){
                             //마지노선 이후.. 들어왔다면?
-                            success(null);
+                            success(lastPacket);
                         }else{
                             fail();
                         }
+
                         close();
                     } catch (InterruptedException e) {
                         GolfzonLogger.i("InterruptedException, isStart : " + isStart);
@@ -136,19 +156,28 @@ public class PacketCheckThread {
 //                        e1.printStackTrace();
                         break;
                     }
+
+
+                    GolfzonLogger.i("packet Check Thread is dead.");
                 }
-                GolfzonLogger.i("Request Thread is dead.");
+
+
+
             }
 
         }
 
+        private String filterString(String packet){
+            return packet.replaceAll("(\r\n|\r|\n|\n\r)", "");
+        }
         private boolean isCheckSum(String filterNewLine){
             String response = filterNewLine.substring(filterNewLine.length() -2);
 
             if(response.equalsIgnoreCase("ok")){
-                GolfzonLogger.e("ok Filter");
+                GolfzonLogger.e("response ok");
                 return true;
             }else{
+                GolfzonLogger.e("response fail");
                 return false;
             }
         }

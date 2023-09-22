@@ -67,7 +67,7 @@ public class RequestThread {
                         MAX_COUNT = requestTypeList.get(0).maxCount;
                         WAIT_TIME_OUT = requestTypeList.get(0).timeout;
 
-                        GolfzonLogger.i("request, type : " + type + ", packet : " + packet + ", requestListener = " + requestListener + " MAX_COUNT " + MAX_COUNT + " WAIT_TIME_OUT " + WAIT_TIME_OUT);
+                        GolfzonLogger.e("request, type : " + type + ", packet : " + packet + ", requestListener = " + requestListener + " MAX_COUNT " + MAX_COUNT + " WAIT_TIME_OUT " + WAIT_TIME_OUT);
 
                         if (TextUtils.isEmpty(packet)) {
                             checkRetry();
@@ -202,7 +202,7 @@ public class RequestThread {
         GolfzonLogger.d("mSDKRequest : " + requestListener + "");
         if (requestListener != null) {
             if (ResultCode.REQUEST_TIMEOUT_ERROR == error) {
-//                checkRetry();
+                checkRetry();
             }
             requestListener.onResult(error, null);
         }
@@ -235,6 +235,7 @@ public class RequestThread {
                             e.printStackTrace();
 
                         }
+
 
 
                         if (RETRY_COUNT++ < MAX_COUNT) {

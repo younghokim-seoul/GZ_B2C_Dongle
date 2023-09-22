@@ -18,9 +18,24 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private String macAddress = "";
 
-    private boolean isAtMode = false;
     private boolean isDtMode = false;
 
+    private RawDataListener rawDataListener;
+
+
+    public PacketCheckThread getPacketCheckThread() {
+        return packetCheckThread;
+    }
+
+    public void setDtMode(boolean dtMode) {
+        GolfzonLogger.i(":>>>>>>setDtMode " + dtMode);
+        isDtMode = dtMode;
+    }
+
+
+    public void setRawDataListener(RawDataListener rawDataListener) {
+        this.rawDataListener = rawDataListener;
+    }
 
     public ResponseManager(
             RequestManager requestManager,
@@ -35,15 +50,19 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
     public void onNewData(byte[] data) {
         // response....
         try {
-            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
+//            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
             String receivceData = HexDump.dumpHexString(data);
             GolfzonLogger.i("receivceData " + new String(receivceData));
-            Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
-            if (!request.type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())) {
+            if(!isDtMode){
+                Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
                 packetBuffer.add(data);
                 packetCheckThread.start(request);
+            }else{
+               if(rawDataListener != null)rawDataListener.onResult(data);
             }
+
+
 
 
 

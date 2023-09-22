@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.Feature;
+import com.hoho.android.usbserial.core.RawDataListener;
 import com.hoho.android.usbserial.core.RequestListener;
 import com.hoho.android.usbserial.core.RequestManager;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -45,6 +46,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import co.golfzon.visionHome.HGSNoti;
 import co.golfzon.visionHome.HGSSensorListener;
@@ -73,6 +76,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private Button sensingButton;
 
     private Button dtActiveButton;
+    private Button atActiveButton;
+    private Button isConnected;
 
     private SerialInputOutputManager usbIoManager;
     private UsbSerialPort usbSerialPort;
@@ -83,6 +88,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
 
     private HGS_Client hgsClient;
+
+    private ExecutorService singpool;
 
 
 
@@ -122,6 +129,20 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
         requestManager = new RequestManager();
         requestManager.init();
+        requestManager.getResponseManager().setDtMode(false);
+        requestManager.getResponseManager().setRawDataListener(new RawDataListener() {
+            @Override
+            public void onResult(byte[] raw) {
+                singpool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        hgsClient.HGSComputeData(raw);
+                    }
+                });
+
+            }
+        });
+        singpool = Executors.newSingleThreadExecutor();
     }
 
     @Override
@@ -167,6 +188,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         sensingButton = view.findViewById(R.id.btn_sensing);
 
         dtActiveButton = view.findViewById(R.id.btn_dt_mode);
+        atActiveButton = view.findViewById(R.id.btn_at_mode);
+        isConnected = view.findViewById(R.id.btn_is_connect);
 
         return view;
     }
@@ -176,6 +199,19 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         super.onViewCreated(view, savedInstanceState);
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
+        isConnected.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+              requestManager.isConnected();
+            }
+        });
+
+        atActiveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestManager.setAtMode(Feature.REQ_AT_MODE);
+            }
+        });
 
         dtActiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -207,9 +243,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             @Override
             public void onReceiveData(@NonNull SwingInfoGyro swingInfoGyro) {
                 SpannableStringBuilder spn = new SpannableStringBuilder();
-                spn.append(swingInfoGyro.toString()).append("\n");
+//                spn.append(swingInfoGyro.toString()).append("\n");
 //                spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorRecieveText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                receiveText.append(spn);
+                GolfzonLogger.i(":::swingInfoGyro " +swingInfoGyro.toString());
             }
 
             @Override
@@ -243,8 +279,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                     Thread.sleep(100); // should show progress bar instead of blocking UI thread
                     usbSerialPort.setBreak(false);
                     SpannableStringBuilder spn = new SpannableStringBuilder();
-                    spn.append("send <break>\n");
-                    spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    spn.append("send <break>\n");
+//                    spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     receiveText.append(spn);
                 } catch(UnsupportedOperationException ignored) {
                     Toast.makeText(getActivity(), "BREAK not supported", Toast.LENGTH_SHORT).show();
@@ -336,7 +372,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             controlLines.start();
 
             requestManager.setUsbSerialPort(usbSerialPort);
-            requestManager.setAtMode(Feature.REQ_AT_MODE);
+
 
         } catch (Exception e) {
             status("connection failed: " + e.getMessage());
@@ -405,7 +441,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
     void status(String str) {
         SpannableStringBuilder spn = new SpannableStringBuilder(str+'\n');
-        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//        spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         receiveText.append(spn);
     }
 

@@ -1,11 +1,19 @@
 package com.hoho.android.usbserial.core;
 
 import com.hoho.android.usbserial.GolfzonLogger;
+import com.hoho.android.usbserial.R;
 import com.hoho.android.usbserial.util.HexDump;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 
 public class ResponseManager implements SerialInputOutputManager.Listener {
 
@@ -21,6 +29,11 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
     private boolean isDtMode = false;
 
     private RawDataListener rawDataListener;
+
+
+    private BlockingQueue<String> dataQueue = new LinkedBlockingQueue<>();
+
+
 
 
     public PacketCheckThread getPacketCheckThread() {
@@ -44,6 +57,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         this.requestManager = requestManager;
         this.requestThread = requestThread;
         this.packetCheckThread = new PacketCheckThread(this);
+
+
     }
 
     @Override
@@ -51,19 +66,40 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         // response....
         try {
 //            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
-            String receivceData = HexDump.dumpHexString(data);
+            String receivceData = new String(data, StandardCharsets.UTF_8);
             GolfzonLogger.i("receivceData " + new String(receivceData));
 
-            if(!isDtMode){
-                Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
-                packetBuffer.add(data);
-                packetCheckThread.start(request);
-            }else{
-               if(rawDataListener != null)rawDataListener.onResult(data);
-            }
+            dataQueue.add(receivceData);
 
 
 
+            Request request  = requestManager.getRequestThread().getRequestTypeList().getFirst();
+
+
+            // RealTimeDataChecker 클래스를 사용하여 데이터 검사
+//            try {
+//                String receivedData = new String(data, StandardCharsets.UTF_8);
+//                // 수신한 데이터를 큐에 추가
+//                dataQueue.add(receivedData);
+//                // 데이터 검사
+//                String result = RealTimeDataChecker.checkRealTimeData(dataQueue,request.timeout);
+//                // 검사 결과 처리
+//                handleDataCheckResult(result);
+//            } catch (TimeoutException e) {
+//                e.printStackTrace();
+//            }
+
+
+
+//            if(!isDtMode){
+//                Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
+//                packetBuffer.add(data);
+//                packetCheckThread.start(request);
+//            }else{
+//               if(rawDataListener != null) rawDataListener.onResult(data);
+//            }
+//
+//
 
 
 //            if(isScanning){
@@ -172,5 +208,17 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     public void bufferClear() {
         packetBuffer.clear();
+    }
+
+    private void handleDataCheckResult(String result) {
+        if ("OK".equals(result)) {
+            // 데이터가 정상적으로 검사되었을 때 처리
+            // 예: 데이터를 화면에 표시하거나 다음 작업 수행
+            System.out.println("Data Check Result: OK");
+        } else {
+            // 타임아웃 또는 검사 실패 시 처리
+            // 예: 에러 메시지 출력 또는 다른 작업 수행
+            System.out.println("Data Check Result: " + result);
+        }
     }
 }

@@ -42,6 +42,7 @@ public class RealTimeDataChecker {
                         String removeNewLine = parseSerialData(dataBuilder.toString());
                         GolfzonLogger.i("removeNewLine = " + removeNewLine);
                         if (removeNewLine.endsWith("OK")) {
+
                             GolfzonLogger.e(":::::ok 데이터 "  + removeNewLine);
                             return "OK";
                         }
@@ -79,7 +80,7 @@ public class RealTimeDataChecker {
 
         String filterNewLine = requireAscii.replaceAll("(\r\n|\r|\n|\n\r)", " ");
         GolfzonLogger.i("filterNewLine => " + filterNewLine);
-        return  filterNewLine.replaceFirst(".$", "");
+        return  filterNewLine.replaceFirst(".$", "").replaceAll("\\s+", " ");
 
     }
 

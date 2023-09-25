@@ -38,8 +38,11 @@ public class RealTimeDataChecker {
                         GolfzonLogger.i("before -> " + dataBuilder.toString());
                         dataBuilder.append(data);
                         GolfzonLogger.i("after -> " + dataBuilder.toString());
-                        if (dataBuilder.toString().endsWith("ok")) {
-                            GolfzonLogger.e(":::::ok 데이터 "  + dataBuilder);
+
+                        String removeNewLine = parseSerialData(dataBuilder.toString());
+                        GolfzonLogger.i("removeNewLine = " + removeNewLine);
+                        if (removeNewLine.endsWith("OK")) {
+                            GolfzonLogger.e(":::::ok 데이터 "  + removeNewLine);
                             return "OK";
                         }
                     }
@@ -68,5 +71,16 @@ public class RealTimeDataChecker {
     }
 
 
+    private String parseSerialData(String requireAscii) throws Exception {
+
+        if(requireAscii == null || requireAscii.length() == 0){
+            return requireAscii;
+        }
+
+        String filterNewLine = requireAscii.replaceAll("(\r\n|\r|\n|\n\r)", " ");
+        GolfzonLogger.i("filterNewLine => " + filterNewLine);
+        return  filterNewLine.replaceFirst(".$", "");
+
+    }
 
 }

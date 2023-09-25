@@ -69,17 +69,16 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         try {
 //            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
 
+            String receivedData = new String(data, StandardCharsets.UTF_8);
+            // 수신한 데이터를 큐에 추가
+
+            GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
 
             Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
 
             // RealTimeDataChecker 클래스를 사용하여 데이터 검사
             try {
-                String receivedData = new String(data, StandardCharsets.UTF_8);
-                // 수신한 데이터를 큐에 추가
-
-                GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
-
                 dataQueue.add(receivedData);
                 // 데이터 검사
                 String result = checker.checkRealTimeData(dataQueue, request.timeout);
@@ -212,7 +211,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         if ("OK".equals(result)) {
             // 데이터가 정상적으로 검사되었을 때 처리
             // 예: 데이터를 화면에 표시하거나 다음 작업 수행
-            System.out.println("Data Check Result: OK");
+            GolfzonLogger.i("Data Check Result: OK");
         } else {
             // 타임아웃 또는 검사 실패 시 처리
             // 예: 에러 메시지 출력 또는 다른 작업 수행

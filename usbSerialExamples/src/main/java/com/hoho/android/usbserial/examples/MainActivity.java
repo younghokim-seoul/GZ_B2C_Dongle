@@ -36,34 +36,34 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
 
 
-
-        DataGenerator dataGenerator = new DataGenerator();
-        dataGenerator.startDataGeneration(); // 데이터 생성 시작
-
-
-
-        RealTimeDataChecker checker = new RealTimeDataChecker();
-
-
-
-
-
-            // DataGenerator 클래스에서 생성된 데이터를 지속적으로 검사
-            while (true) {
-                try{
-                    BlockingQueue<String> sharedDataQueue = dataGenerator.getDataQueue();
-                    String result = checker.checkRealTimeData(sharedDataQueue,700);
-                    handleDataCheckResult(result,dataGenerator);
-
-                }catch (TimeoutException e){
-                    GolfzonLogger.e(":::TimeoutException => " + e);
-                }catch (Exception e){
-                    GolfzonLogger.e(":::e => " + e);
-                }finally {
-//                    checker.shutdownExecutor();
-                }
-
-            }
+//
+//        DataGenerator dataGenerator = new DataGenerator();
+//        dataGenerator.startDataGeneration(); // 데이터 생성 시작
+//
+//
+//
+//        RealTimeDataChecker checker = new RealTimeDataChecker();
+//
+//
+//
+//
+//
+//            // DataGenerator 클래스에서 생성된 데이터를 지속적으로 검사
+//            while (true) {
+//                try{
+//                    BlockingQueue<String> sharedDataQueue = dataGenerator.getDataQueue();
+//                    String result = checker.checkRealTimeData(sharedDataQueue,700);
+//                    handleDataCheckResult(result,dataGenerator);
+//
+//                }catch (TimeoutException e){
+//                    GolfzonLogger.e(":::TimeoutException => " + e);
+//                }catch (Exception e){
+//                    GolfzonLogger.e(":::e => " + e);
+//                }finally {
+////                    checker.shutdownExecutor();
+//                }
+//
+//            }
 
 
     }

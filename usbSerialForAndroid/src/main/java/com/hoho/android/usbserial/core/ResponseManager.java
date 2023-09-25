@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,7 +34,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private BlockingQueue<String> dataQueue = new LinkedBlockingQueue<>();
 
-
+    private RealTimeDataChecker checker;
 
 
     public PacketCheckThread getPacketCheckThread() {
@@ -57,6 +58,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         this.requestManager = requestManager;
         this.requestThread = requestThread;
         this.packetCheckThread = new PacketCheckThread(this);
+        this.checker = new RealTimeDataChecker();
 
 
     }
@@ -66,30 +68,26 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         // response....
         try {
 //            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
-            String receivceData = new String(data, StandardCharsets.UTF_8);
-            GolfzonLogger.i("receivceData " + new String(receivceData));
-
-            dataQueue.add(receivceData);
 
 
-
-            Request request  = requestManager.getRequestThread().getRequestTypeList().getFirst();
+            Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
 
             // RealTimeDataChecker 클래스를 사용하여 데이터 검사
-//            try {
-//                String receivedData = new String(data, StandardCharsets.UTF_8);
-//                // 수신한 데이터를 큐에 추가
-//                dataQueue.add(receivedData);
-//                // 데이터 검사
-//                String result = RealTimeDataChecker.checkRealTimeData(dataQueue,request.timeout);
-//                // 검사 결과 처리
-//                handleDataCheckResult(result);
-//            } catch (TimeoutException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                String receivedData = new String(data, StandardCharsets.UTF_8);
+                // 수신한 데이터를 큐에 추가
 
+                GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
 
+                dataQueue.add(receivedData);
+                // 데이터 검사
+                String result = checker.checkRealTimeData(dataQueue, request.timeout);
+                // 검사 결과 처리
+                handleDataCheckResult(result);
+            } catch (TimeoutException | RuntimeException e) {
+                GolfzonLogger.e(":::=> [ERROR] => " + e);
+            }
 
 //            if(!isDtMode){
 //                Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();

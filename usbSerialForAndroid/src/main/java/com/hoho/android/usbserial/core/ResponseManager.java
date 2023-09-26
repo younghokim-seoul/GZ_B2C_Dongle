@@ -1,27 +1,25 @@
 package com.hoho.android.usbserial.core;
 
+import android.util.Pair;
+
 import com.hoho.android.usbserial.GolfzonLogger;
-import com.hoho.android.usbserial.R;
-import com.hoho.android.usbserial.util.HexDump;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private RequestThread requestThread;
     private RequestManager requestManager;
-
-    private PacketCheckThread packetCheckThread;
 
     private List<byte[]> packetBuffer = new ArrayList<>();
 
@@ -31,15 +29,10 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 
     private RawDataListener rawDataListener;
 
-
     private BlockingQueue<String> dataQueue = new LinkedBlockingQueue<>();
 
     private RealTimeDataChecker checker;
 
-
-    public PacketCheckThread getPacketCheckThread() {
-        return packetCheckThread;
-    }
 
     public void setDtMode(boolean dtMode) {
         GolfzonLogger.i(":>>>>>>setDtMode " + dtMode);
@@ -57,7 +50,6 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
     ) {
         this.requestManager = requestManager;
         this.requestThread = requestThread;
-        this.packetCheckThread = new PacketCheckThread(this);
         this.checker = new RealTimeDataChecker();
 
 
@@ -69,24 +61,37 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         try {
 //            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
 
-            String receivedData = new String(data, StandardCharsets.UTF_8);
+
             // 수신한 데이터를 큐에 추가
 
-            GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
 
             Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
+            if (request.type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())) {
+                return;
+            }
+
+            String receivedData = new String(data, StandardCharsets.UTF_8);
+            GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
+
+            dataQueue.add(receivedData);
+            // 데이터 검사
+            Pair<String, String> result = checker.checkRealTimeData(dataQueue, request.timeout);
+            // 검사 결과 처리
+            handleDataCheckResult(request, result);
+
 
             // RealTimeDataChecker 클래스를 사용하여 데이터 검사
-            try {
-                dataQueue.add(receivedData);
-                // 데이터 검사
-                String result = checker.checkRealTimeData(dataQueue, request.timeout);
-                // 검사 결과 처리
-                handleDataCheckResult(result);
-            } catch (TimeoutException | RuntimeException e) {
-                GolfzonLogger.e(":::=> [ERROR] => " + e);
-            }
+//            try {
+//                dataQueue.add(receivedData);
+//                // 데이터 검사
+//                String result = checker.checkRealTimeData(dataQueue, request.timeout);
+//                // 검사 결과 처리
+//                handleDataCheckResult(request, result);
+//            } catch (TimeoutException | RuntimeException e) {
+//                GolfzonLogger.e(":::=> [ERROR] => " + e);
+//            }
+
 
 //            if(!isDtMode){
 //                Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
@@ -172,6 +177,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 //
 //            }
 
+        } catch (TimeoutException | RuntimeException e) {
+            GolfzonLogger.e(":::=> [ERROR] => " + e);
         } catch (Exception e) {
             GolfzonLogger.e("[onNewData] error => " + e);
         }
@@ -183,35 +190,60 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         GolfzonLogger.e("[onRunError] error => " + e);
     }
 
-    private String[] parseSerialData(byte[] data) throws Exception {
-        String convertToAscii = new String(data);
-        GolfzonLogger.i("::::ascii " + convertToAscii);
-        String filterNewLine = convertToAscii.replaceAll("(\r\n|\r|\n|\n\r)", " ");
-        GolfzonLogger.i("filterNewLine => " + filterNewLine);
-        return removeLastChar(filterNewLine.replaceAll("\\s+", "-")).split("-");
 
-    }
-
-    private String removeLastChar(String str) {
-        if (str == null) {
-            return null;
-        }
-        return str.replaceFirst(".$", "");
-    }
-
-    public List<byte[]> getPacketBuffer() {
-        return packetBuffer;
-    }
-
-    public void bufferClear() {
-        packetBuffer.clear();
-    }
-
-    private void handleDataCheckResult(String result) {
-        if ("OK".equals(result)) {
+    private void handleDataCheckResult(Request request, Pair<String, String> result) throws Exception {
+        if ("OK".equals(result.first)) {
             // 데이터가 정상적으로 검사되었을 때 처리
             // 예: 데이터를 화면에 표시하거나 다음 작업 수행
-            GolfzonLogger.i("Data Check Result: OK");
+            GolfzonLogger.i("[handleDataCheckResult] Data Check Result: OK");
+
+            String[] packet = result.second.split(" ");
+            String mainMsg = packet[0];
+
+            Optional<Feature> feature = Arrays.stream(Feature.values()).filter(feature1 -> feature1.getResMsg().equalsIgnoreCase(mainMsg)).findFirst();
+
+            if (feature.isPresent()) {
+                switch (feature.get()) {
+                    case REQ_AT_MODE:
+                        break;
+                    case REQ_DT_MODE:
+                        break;
+                    case REQ_IS_MASTER:
+
+
+                        GolfzonLogger.i("동글 마스터 설정 확인");
+                        String content[] = packet[1].split(":");
+                        boolean isMaster = content[1].equalsIgnoreCase("1");
+
+                        GolfzonLogger.i(":::동글이 마스터인지 여부 isMaster -> " + isMaster);
+
+                        if (isMaster) {
+                           requestManager.setScanDevice();
+                        } else {
+
+                        }
+
+                        break;
+                    case REQ_IS_CONNECTED:
+                        break;
+                    case REQ_SCAN_DEVICE:
+                        String[] visionHomeFilter = result.second.split("\r\n");
+
+                        List<String[]> scanResult = Arrays.stream(visionHomeFilter).filter(s -> s.contains("VisionHome")).map(s -> s.split(",")).collect(Collectors.toList());
+
+                        if (!scanResult.isEmpty()) {
+                            String[] nearVisionHome = scanResult.stream().findFirst().get();
+                            macAddress = nearVisionHome[0].split(":")[1];
+                            GolfzonLogger.i("DEVICE INFO => " + nearVisionHome[0] + nearVisionHome[1] + nearVisionHome[2] + nearVisionHome[3] + nearVisionHome[4]);
+                        } else {
+                            GolfzonLogger.i(":::::VisionHome 검색 안됨");
+                        }
+                        break;
+
+                    default:
+                }
+            }
+
         } else {
             // 타임아웃 또는 검사 실패 시 처리
             // 예: 에러 메시지 출력 또는 다른 작업 수행

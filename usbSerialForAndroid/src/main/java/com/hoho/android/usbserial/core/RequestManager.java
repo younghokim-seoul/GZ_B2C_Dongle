@@ -42,7 +42,7 @@ public class RequestManager {
         return requestThread;
     }
 
-    private void addQueueReqeustPacket(String type, String packet, RequestListener requestListener, PacketCheckListener packetCheckListener, int retryCount, int... timeout) {
+    private void addQueueReqeustPacket(String type, String packet, RequestListener requestListener, int retryCount, int... timeout) {
         GolfzonLogger.e(">>>>>>main = " + type);
         GolfzonLogger.e(">>>>>>sub = " + packet);
         GolfzonLogger.e(">>>>>>timeout  = " + timeout[0]);
@@ -53,7 +53,7 @@ public class RequestManager {
         }
 
 
-        requestThread.addRequestList(new Request(type, packet, timeout[0], retryCount, requestListener, packetCheckListener));
+        requestThread.addRequestList(new Request(type, packet, timeout[0], retryCount, requestListener));
         requestThread.start();
     }
 
@@ -66,7 +66,7 @@ public class RequestManager {
                 requestThread.checkRetry();
                 isMasterCheck();
             }
-        }, null, 3, 1000);
+        }, 3, 1000);
 
     }
 
@@ -74,37 +74,14 @@ public class RequestManager {
     public void isMasterCheck() {
         addQueueReqeustPacket(Feature.REQ_IS_MASTER.name(), Feature.REQ_IS_MASTER.getReqMsg(), (result, object) -> {
 
-        }, (result, object) -> {
-            if(result == ResultCode.SUCCESS){
-                requestThread.checkRetry();
-                getResponseManager().getPacketCheckThread().close();
-                setScanDevice();
-            }else{
-                requestThread.checkRetry();
-            }
-
         }, 3, 1000);
     }
 
 
     public void setScanDevice() {
-
-        getResponseManager().getPacketCheckThread().close();
         addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
                 GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
 
-        }, (result, object) -> {
-            GolfzonLogger.i("::::::setScanDevice result = >  " + result);
-            if(result == ResultCode.SUCCESS){
-                String sb = (String) object;
-                requestThread.checkRetry();
-                getResponseManager().getPacketCheckThread().close();
-
-                setConnect("C8C7B9F67698r");
-
-            }else{
-                requestThread.checkRetry();
-            }
         }, 1, 10000);
     }
 
@@ -121,15 +98,9 @@ public class RequestManager {
 
 
                     }
-                }, new PacketCheckListener() {
-                    @Override
-                    public void onResult(int result, Object object) {
-                        requestThread.checkRetry();
-                        getResponseManager().getPacketCheckThread().close();
-                    }
-                } , 1, 500);
+                }, 1, 500);
             }
-        }, null, 3, 1000);
+        },  3, 1000);
     }
 
     public void setConnect(String address) {
@@ -139,10 +110,6 @@ public class RequestManager {
                 GolfzonLogger.e("feature = REQ_SET_CONNECTED");
 
             }
-        }, (result, object) -> {
-            requestThread.checkRetry();
-            getResponseManager().getPacketCheckThread().close();
-            setATtoDT();
         }, 3, 20000);
     }
 
@@ -154,10 +121,6 @@ public class RequestManager {
 
 
             }
-        }, (result, object) -> {
-            requestThread.checkRetry();
-            getResponseManager().getPacketCheckThread().close();
-            getResponseManager().setDtMode(true);
         }, 3, 1000);
     }
 

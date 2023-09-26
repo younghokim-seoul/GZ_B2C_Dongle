@@ -9,7 +9,6 @@ public class Request {
     int maxCount;
     RequestListener requestListener;
 
-    PacketCheckListener packetCheckListener;
 
 
 
@@ -17,13 +16,14 @@ public class Request {
 
 
 
-    public Request(String type, String packet, int timeout, int maxCount, RequestListener requestListener,PacketCheckListener packetCheckListener) {
+
+    public Request(String type, String packet, int timeout, int maxCount, RequestListener requestListener) {
         this.type = type;
         this.packet = packet;
         this.timeout = timeout;
         this.maxCount = maxCount;
         this.requestListener = requestListener;
-        this.packetCheckListener = packetCheckListener;
+
     }
 
     @Override
@@ -34,7 +34,6 @@ public class Request {
                 ", timeout=" + timeout +
                 ", maxCount=" + maxCount +
                 ", requestListener=" + requestListener +
-                ", packetCheckListener=" + packetCheckListener +
                 '}';
     }
 }

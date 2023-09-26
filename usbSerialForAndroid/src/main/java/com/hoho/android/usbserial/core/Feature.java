@@ -3,7 +3,7 @@ package com.hoho.android.usbserial.core;
 import java.util.HashMap;
 
 public enum Feature {
-    REQ_AT_MODE("+++","+++"),
+    REQ_AT_MODE("+++","ok"),
     REQ_DT_MODE("ATO1\r\n","ATO1"),
     REQ_IS_MASTER("AT+UBTLE?\r\n","AT+UBTLE?"),
     REQ_SET_MASTER( "AT+UBTLE=1\r\n", "AT+UBTLE=1"),

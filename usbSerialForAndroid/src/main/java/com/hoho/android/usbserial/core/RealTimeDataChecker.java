@@ -1,5 +1,7 @@
 package com.hoho.android.usbserial.core;
 
+import android.util.Pair;
+
 import com.hoho.android.usbserial.GolfzonLogger;
 
 import java.util.concurrent.BlockingQueue;
@@ -22,11 +24,11 @@ public class RealTimeDataChecker {
 
 
     // 실시간 데이터 검사를 수행하는 메서드
-    public String checkRealTimeData(BlockingQueue<String> dataQueue, int timeoutMs) throws TimeoutException {
+    public Pair<String,String> checkRealTimeData(BlockingQueue<String> dataQueue, int timeoutMs) throws TimeoutException {
 
 
         try {
-            Callable<String> dataCheckTask = () -> {
+            Callable<Pair<String,String>> dataCheckTask = () -> {
 
                 long startTime = System.currentTimeMillis();
                 StringBuilder dataBuilder = new StringBuilder();
@@ -43,8 +45,8 @@ public class RealTimeDataChecker {
                         GolfzonLogger.i("removeNewLine = " + removeNewLine);
                         if (removeNewLine.endsWith("OK")) {
 
-                            GolfzonLogger.e(":::::ok 데이터 "  + removeNewLine);
-                            return "OK";
+                            GolfzonLogger.e(":::::ok 데이터 " + removeNewLine);
+                            return new Pair<>("OK",removeNewLine);
                         }
                     }
 
@@ -56,7 +58,7 @@ public class RealTimeDataChecker {
                 }
             };
             // 데이터 검사 태스크를 스레드 풀에 제출하고 결과를 기다림
-            Future<String> future = executor.submit(dataCheckTask);
+            Future<Pair<String,String>> future = executor.submit(dataCheckTask);
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException e) {
             // 오류가 발생하면 Exception을 throw하도록 수정
@@ -74,13 +76,14 @@ public class RealTimeDataChecker {
 
     private String parseSerialData(String requireAscii) throws Exception {
 
-        if(requireAscii == null || requireAscii.length() == 0){
+        if (requireAscii == null || requireAscii.length() == 0) {
             return requireAscii;
         }
 
         String filterNewLine = requireAscii.replaceAll("(\r\n|\r|\n|\n\r)", " ");
+        String filterSplace = filterNewLine.replaceAll("\\s+", " ");
         GolfzonLogger.i("filterNewLine => " + filterNewLine);
-        return  filterNewLine.replaceFirst(".$", "").replaceAll("\\s+", " ");
+        return filterSplace.replaceFirst(".$", "");
 
     }
 

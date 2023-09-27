@@ -64,7 +64,7 @@ public class RequestManager {
             if (requestThread != null) {
                 GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
                 requestThread.checkRetry();
-                isMasterCheck();
+                setScanDevice();
             }
         }, 3, 1000);
 

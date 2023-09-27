@@ -51,7 +51,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
         this.requestManager = requestManager;
         this.requestThread = requestThread;
         this.checker = new RealTimeDataChecker();
-
+        this.checker.start();
 
     }
 
@@ -59,11 +59,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
     public void onNewData(byte[] data) {
         // response....
         try {
-//            GolfzonLogger.i("::::task... " + requestManager.getRequestThread().getRequestTypeList().getFirst().toString());
-
 
             // 수신한 데이터를 큐에 추가
-
 
             Request request = requestManager.getRequestThread().getRequestTypeList().getFirst();
 
@@ -74,11 +71,14 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
             String receivedData = new String(data, StandardCharsets.UTF_8);
             GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
 
-            dataQueue.add(receivedData);
-            // 데이터 검사
-            Pair<String, String> result = checker.checkRealTimeData(dataQueue, request.timeout);
-            // 검사 결과 처리
-            handleDataCheckResult(request, result);
+            checker.setTimeoutMs(request.timeout);
+            checker.onReceiveData(receivedData);
+
+//            dataQueue.add(receivedData);
+//            // 데이터 검사
+//            Pair<String, String> result = checker.checkRealTimeData(request.timeout);
+//            // 검사 결과 처리
+//            handleDataCheckResult(request, result);
 
 
             // RealTimeDataChecker 클래스를 사용하여 데이터 검사
@@ -177,8 +177,6 @@ public class ResponseManager implements SerialInputOutputManager.Listener {
 //
 //            }
 
-        } catch (TimeoutException | RuntimeException e) {
-            GolfzonLogger.e(":::=> [ERROR] => " + e);
         } catch (Exception e) {
             GolfzonLogger.e("[onNewData] error => " + e);
         }

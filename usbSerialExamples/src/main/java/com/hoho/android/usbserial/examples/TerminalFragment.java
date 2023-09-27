@@ -12,10 +12,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,8 +32,7 @@ import androidx.fragment.app.Fragment;
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.Feature;
 import com.hoho.android.usbserial.core.RawDataListener;
-import com.hoho.android.usbserial.core.RequestListener;
-import com.hoho.android.usbserial.core.RequestManager;
+import com.hoho.android.usbserial.core.DongleManager;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
@@ -84,7 +81,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private UsbPermission usbPermission = UsbPermission.Unknown;
     private boolean connected = false;
 
-    private RequestManager requestManager;
+    private DongleManager requestManager;
 
 
     private HGS_Client hgsClient;
@@ -127,7 +124,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
         hgsClient = HGS_ClientManager.getInstance().create(requireContext());
 
-        requestManager = new RequestManager();
+        requestManager = new DongleManager();
         requestManager.init();
         requestManager.getResponseManager().setDtMode(false);
         requestManager.getResponseManager().setRawDataListener(new RawDataListener() {
@@ -209,7 +206,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         atActiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestManager.setAtMode(Feature.REQ_AT_MODE);
+                requestManager.setAtMode();
             }
         });
 

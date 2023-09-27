@@ -3,7 +3,7 @@ package com.hoho.android.usbserial.core;
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 
-public class RequestManager {
+public class DongleManager {
 
     private RequestThread requestThread;
 
@@ -58,13 +58,13 @@ public class RequestManager {
     }
 
 
-    public void setAtMode(Feature feature) {
-        GolfzonLogger.e("[Request Feature] : " + feature + " packet => " + feature.getReqMsg());
-        addQueueReqeustPacket(feature.name(), feature.getReqMsg(), (result, object) -> {
+    public void setAtMode() {
+
+        addQueueReqeustPacket(Feature.REQ_AT_MODE.name(), Feature.REQ_AT_MODE.getReqMsg(), (result, object) -> {
             if (requestThread != null) {
                 GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
                 requestThread.checkRetry();
-                setScanDevice();
+                isMasterCheck();
             }
         }, 3, 1000);
 
@@ -82,7 +82,7 @@ public class RequestManager {
         addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
                 GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
 
-        }, 1, 10000);
+        }, 3, 10000);
     }
 
 

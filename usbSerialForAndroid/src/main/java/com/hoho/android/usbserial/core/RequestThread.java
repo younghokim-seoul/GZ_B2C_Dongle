@@ -3,7 +3,6 @@ package com.hoho.android.usbserial.core;
 import android.text.TextUtils;
 
 import com.hoho.android.usbserial.GolfzonLogger;
-import com.hoho.android.usbserial.util.HexDump;
 
 import java.util.LinkedList;
 
@@ -16,7 +15,7 @@ public class RequestThread {
 
     private final LinkedList<Request> requestTypeList = new LinkedList<>();
 
-    public RequestManager requestManager;
+    public DongleManager requestManager;
 
     private PoolWorker threads;
 
@@ -24,7 +23,7 @@ public class RequestThread {
 
 
 
-    public RequestThread(RequestManager requestManager) {
+    public RequestThread(DongleManager requestManager) {
         this.requestManager = requestManager;
     }
 

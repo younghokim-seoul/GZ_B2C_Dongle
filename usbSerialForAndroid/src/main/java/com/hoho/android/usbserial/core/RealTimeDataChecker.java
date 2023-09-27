@@ -24,7 +24,7 @@ public class RealTimeDataChecker {
     private int timeoutMs= -1;
 
 
-    private interface DataCheckerCallback {
+    public interface DataCheckerCallback {
         void onDataCheckResult(Pair<String,String> result);
     }
 

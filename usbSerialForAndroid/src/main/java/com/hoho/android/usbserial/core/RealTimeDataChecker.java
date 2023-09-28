@@ -21,11 +21,13 @@ public class RealTimeDataChecker {
 
     private DataCheckerCallback callback;
 
-    private int timeoutMs= -1;
+    private int timeoutMs = -1;
 
 
     public interface DataCheckerCallback {
-        void onDataCheckResult(Pair<String,String> result);
+        void onDataCheckResult(Pair<String, String> result);
+
+        void onTimeout();
     }
 
 
@@ -43,85 +45,48 @@ public class RealTimeDataChecker {
         this.timeoutMs = timeoutMs;
     }
 
-    public void onReceiveData(String data){
+    public void onReceiveData(String data) {
         dataQueue.add(data);
     }
 
-    public void start(){
+    public void start() {
 
         timerExecutor.execute(() -> {
-            while (true){
+            while (true) {
                 try {
-                    if(timeoutMs != -1) {
+                    if (timeoutMs > 0) {
                         Pair<String, String> result = checkRealTimeData(timeoutMs);
-                        GolfzonLogger.i(":::result " + result.first);
+
                         timeoutMs = -1;
-                        notify(result);
+
+                        if (result == null) {
+                            callback.onTimeout();
+                        } else {
+                            GolfzonLogger.i(":::result " + result.first);
+                            notify(result);
+                        }
                     }
 
-                }catch (InterruptedException | ExecutionException e){
+                } catch (InterruptedException | ExecutionException e) {
                     GolfzonLogger.i(":::[error] " + e);
-                    notify(new Pair<>("Error",e.getMessage()));
+                    notify(null);
                 }
             }
         });
     }
 
-    public void notify(Pair<String, String> result){
-        if(callback != null) callback.onDataCheckResult(result);
+    public void notify(Pair<String, String> result) {
+        if (callback != null) callback.onDataCheckResult(result);
     }
 
-    public void stop(){
+    public void stop() {
         timerExecutor.shutdownNow();
     }
 
     // 실시간 데이터 검사를 수행하는 메서드
-    public Pair<String,String> checkRealTimeData(int timeout) throws InterruptedException, ExecutionException {
-
+    public Pair<String, String> checkRealTimeData(int timeout) throws InterruptedException, ExecutionException {
         Future<Pair<String, String>> future = taskExecutor.submit(new DataCheckerTask(dataQueue, timeout));
-
         return future.get();
-
-//        try {
-//            Callable<Pair<String,String>> dataCheckTask = () -> {
-//
-//                long startTime = System.currentTimeMillis();
-//                StringBuilder dataBuilder = new StringBuilder();
-//                while (true) {
-//                    String data = dataQueue.poll();
-//
-//                    if (data != null) {
-//                        GolfzonLogger.i("::::검사필요한 데이터 -> " + data);
-////                        GolfzonLogger.i("before -> " + dataBuilder.toString());
-//                        dataBuilder.append(data);
-////                        GolfzonLogger.i("after -> " + dataBuilder.toString());
-//
-//                        String removeNewLine = parseSerialData(dataBuilder.toString());
-//                        GolfzonLogger.i("removeNewLine = " + removeNewLine);
-//                        if (removeNewLine.endsWith("OK")) {
-//
-//                            GolfzonLogger.e(":::::ok 데이터 " + removeNewLine);
-//                            return new Pair<>("OK",removeNewLine);
-//                        }
-//                    }
-//
-//                    long currentTime = System.currentTimeMillis();
-//                    if (currentTime - startTime >= timeoutMs) {
-//                        dataBuilder.setLength(0);
-//                        throw new TimeoutException("데이터가 시간 내에 도착하지 않았습니다.");
-//                    }
-//                }
-//            };
-//            // 데이터 검사 태스크를 스레드 풀에 제출하고 결과를 기다림
-//            Future<Pair<String,String>> future = executor.submit(dataCheckTask);
-//            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
-//        } catch (InterruptedException | ExecutionException e) {
-//            // 오류가 발생하면 Exception을 throw하도록 수정
-//            GolfzonLogger.e("::대체 무슨 에러예요? " + e);
-//            throw new RuntimeException("오류 발생", e);
-//        } finally {
-////            executor.shutdown();
-//        }
     }
 
 
@@ -137,7 +102,7 @@ public class RealTimeDataChecker {
 
     }
 
-    private static class DataCheckerTask implements Callable<Pair<String,String>>{
+    private static class DataCheckerTask implements Callable<Pair<String, String>> {
 
         private final BlockingQueue<String> dataQueue;
         private final int timeoutMs;
@@ -163,14 +128,14 @@ public class RealTimeDataChecker {
                     if (removeNewLine.endsWith("OK")) {
 
                         GolfzonLogger.e(":::::ok 데이터 " + removeNewLine);
-                        return new Pair<>("OK",removeNewLine);
+                        return new Pair<>("OK", removeNewLine);
                     }
                 }
 
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - startTime >= timeoutMs) {
                     dataBuilder.setLength(0);
-                    return new Pair<>("Timeout","timeout occurred");
+                    return null;
                 }
             }
         }

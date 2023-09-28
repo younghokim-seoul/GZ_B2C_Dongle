@@ -14,16 +14,6 @@ public enum Feature {
     REQ_IS_CONNECTED("AT+UDLP?\r\n","AT+UDLP?");
 
 
-    static private final HashMap<String,Feature> sFeatureMap;
-
-
-    static {
-        sFeatureMap = new HashMap<>(Feature.values().length);
-
-        for(Feature type : Feature.values()){
-            sFeatureMap.put(type.resMsg,type);
-        }
-    }
 
 
     final String reqMsg;
@@ -44,7 +34,19 @@ public enum Feature {
         return resMsg;
     }
 
-    public static Feature byType(String key){
-        return sFeatureMap.get(key);
+
+    public String getKey() {
+        return resMsg;
     }
+
+    public static Feature byKey(String key) {
+        for (Feature feature : values()) {
+            if (feature.getKey().equals(key)) {
+                return feature;
+            }
+        }
+        return null;
+    }
+
+
 }

@@ -8,11 +8,16 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
 
 import com.hoho.android.usbserial.GolfzonLogger;
+import com.hoho.android.usbserial.core.Feature;
 import com.hoho.android.usbserial.core.RealTimeDataChecker;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeoutException;
-
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
@@ -35,54 +40,65 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             onBackStackChanged();
 
 
+        String inputString = "AT+UDCP=sps://A1DPFDAS356p";
+//
+//        // 정규식 패턴을 정의합니다.
+//        String regexPattern = "sps://([A-Za-z0-9]+)";
+//
+//        // 패턴을 컴파일합니다.
+//        Pattern pattern = Pattern.compile(regexPattern);
+//
+//        // 입력 문자열에서 패턴과 매치되는 부분을 찾습니다.
+//        Matcher matcher = pattern.matcher(inputString);
+//
+//        // 매치가 발견되었을 때 추출합니다.
+//        if (matcher.find()) {
+//            String result = matcher.group(1); // 첫 번째 그룹을 가져옵니다.
+//            String type = matcher.group(0); // 첫 번째 그룹을 가져옵니다.
+//            GolfzonLogger.i(":::result.. " + result );
+//            GolfzonLogger.i(":::type.. " + type );
+//        } else {
+//            GolfzonLogger.i("Pattern not found.");
+//        }
 
-//
-//        DataGenerator dataGenerator = new DataGenerator();
-//        dataGenerator.startDataGeneration(); // 데이터 생성 시작
-//
-//
-//
-//        RealTimeDataChecker checker = new RealTimeDataChecker();
-//
-//
-//
-//
-//
-//            // DataGenerator 클래스에서 생성된 데이터를 지속적으로 검사
-//            while (true) {
-//                try{
-//                    BlockingQueue<String> sharedDataQueue = dataGenerator.getDataQueue();
-//                    String result = checker.checkRealTimeData(sharedDataQueue,700);
-//                    handleDataCheckResult(result,dataGenerator);
-//
-//                }catch (TimeoutException e){
-//                    GolfzonLogger.e(":::TimeoutException => " + e);
-//                }catch (Exception e){
-//                    GolfzonLogger.e(":::e => " + e);
-//                }finally {
-////                    checker.shutdownExecutor();
-//                }
-//
-//            }
+
+        ExecutorService timer = Executors.newSingleThreadExecutor();
+
+        timer.execute(new Runnable() {
+            @Override
+            public void run() {
+                int i = 0;
+                while (i < Feature.values().length) {
+                    filterFeatureType(Feature.values()[i].getKey());
+                    i++;
+                }
+                filterFeatureType(inputString);
+            }
+        });
+
+
+
 
 
     }
 
-    private void handleDataCheckResult(String result, DataGenerator dataGenerator) {
-        if ("OK".equals(result)) {
-            // 데이터가 정상적으로 검사되었을 때 처리
-            // 예: 데이터를 화면에 표시하거나 다음 작업 수행
-            GolfzonLogger.e("데이터가 정상적으로 검사되었을 때 처리");
-            dataGenerator.clearQueue();
-        } else {
-            // 타임아웃 또는 검사 실패 시 처리
-            // 예: 에러 메시지 출력 또는 다른 작업 수행
-            GolfzonLogger.e("타임아웃 또는 검사 실패 시 처리");
+
+    private void filterFeatureType(final String responseMessage) {
+
+
+        Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
+            String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
+            return featureEnum.getKey().equalsIgnoreCase(key);
+        }).findFirst();
+
+
+        if (feature.isPresent()) {
+            Feature feature1 = feature.get();
+
+            GolfzonLogger.i(":::feature1 : " + feature1);
+            GolfzonLogger.e(":::mainMsg : " + responseMessage);
         }
     }
-
-
-
 
 
     @Override

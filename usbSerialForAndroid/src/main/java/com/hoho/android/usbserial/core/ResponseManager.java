@@ -91,6 +91,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
         String responseMessage = packet[0];
 
 
+
         Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
             String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
             return featureEnum.getKey().equalsIgnoreCase(key);

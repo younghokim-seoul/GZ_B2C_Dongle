@@ -1,9 +1,5 @@
 package com.hoho.android.usbserial.examples;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
-import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -15,15 +11,8 @@ import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.Feature;
 import com.hoho.android.usbserial.core.RealTimeDataChecker;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 

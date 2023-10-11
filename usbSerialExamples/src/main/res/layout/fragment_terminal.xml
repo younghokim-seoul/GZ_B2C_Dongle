@@ -6,7 +6,46 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_init"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="init"/>
+
+        <Button
+            android:id="@+id/btn_sensing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sensing"/>
+
+        <Button
+            android:id="@+id/btn_at_mode"
+            android:layout_width="wrap_content"
+            android:text="atMode"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btn_dt_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="dtMode"/>
+
+        <Button
+            android:id="@+id/btn_is_connect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="isConnect"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -75,35 +114,6 @@
             android:textOff="RI"
             android:textOn="RI" />
 
-        <Button
-            android:id="@+id/btn_init"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="init"/>
-
-        <Button
-            android:id="@+id/btn_sensing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sensing"/>
-
-        <Button
-            android:id="@+id/btn_at_mode"
-            android:layout_width="wrap_content"
-            android:text="atMode"
-            android:layout_height="wrap_content"/>
-
-        <Button
-            android:id="@+id/btn_dt_mode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="dtMode"/>
-
-        <Button
-            android:id="@+id/btn_is_connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="isConnect"/>
 
     </LinearLayout>
 
@@ -112,16 +122,29 @@
         android:background="?android:attr/listDivider"
         android:layout_height="2dp" />
 
-    <TextView
-        android:id="@+id/receive_text"
+
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroller"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:freezesText="true"
-        android:gravity="bottom"
-        android:scrollbars="vertical"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        android:typeface="monospace" />
+        android:layout_marginTop="10dp"
+        android:fillViewport="true"
+        android:visibility="visible">
+
+        <com.hoho.android.usbserial.examples.widget.PerfectScrollableTextView
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_margin="10dp"
+            android:id="@+id/txt_read"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:lineSpacingExtra="7dp" />
+
+    </androidx.core.widget.NestedScrollView>
 
     <Button
         android:id="@+id/receive_btn"

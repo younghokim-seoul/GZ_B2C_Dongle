@@ -15,6 +15,7 @@ public class DongleManager {
 
     public void init() {
 
+
         if (requestThread == null) {
             requestThread = new RequestThread(this);
         }

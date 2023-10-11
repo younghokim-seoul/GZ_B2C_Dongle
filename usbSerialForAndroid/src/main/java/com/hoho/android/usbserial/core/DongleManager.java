@@ -104,13 +104,13 @@ public class DongleManager {
     }
 
     public void setConnect(String address) {
-        addQueueReqeustPacket(Feature.REQ_SET_CONNECTED.name(), Feature.REQ_SET_CONNECTED.getReqMsg() + address, new RequestListener() {
+        addQueueReqeustPacket(Feature.REQ_SET_CONNECTED.name(), Feature.REQ_SET_CONNECTED.getReqMsg() + address + "\r\n", new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = REQ_SET_CONNECTED");
 
             }
-        }, 3, 20000);
+        }, 3, 5000);
     }
 
     public void setATtoDT(){

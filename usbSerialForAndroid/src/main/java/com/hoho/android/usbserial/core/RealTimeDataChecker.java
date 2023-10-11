@@ -127,7 +127,7 @@ public class RealTimeDataChecker {
 //                    GolfzonLogger.i("removeNewLine = " + removeNewLine);
                     if (removeNewLine.endsWith("OK")) {
 
-                        GolfzonLogger.e(":::::ok 데이터 " + removeNewLine);
+//                        GolfzonLogger.e(":::::ok 데이터 " + dataBuilder.toString());
                         return new Pair<>("OK", removeNewLine);
                     }
                 }

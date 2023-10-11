@@ -59,18 +59,22 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
         try {
             // 수신한 데이터를 큐에 추가
-            Request request = dongleManager.getRequestThread().getRequestTypeList().getFirst();
-
-            if (request.type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())) {
-                return;
-            }
 
             String receivedData = new String(data, StandardCharsets.UTF_8);
             GolfzonLogger.e(":::큐 집어넣기전 데이터.. " + receivedData);
 
-            checker.setTimeoutMs(request.timeout);
-            checker.onReceiveData(receivedData);
 
+            if(isDtMode){
+
+            }else{
+                Request request = dongleManager.getRequestThread().getRequestTypeList().getFirst();
+
+                if (request.type.equalsIgnoreCase(Feature.REQ_AT_MODE.name())) {
+                    return;
+                }
+                checker.setTimeoutMs(request.timeout);
+                checker.onReceiveData(receivedData);
+            }
         } catch (Exception e) {
             GolfzonLogger.e("[onNewData] error => " + e);
         }
@@ -102,6 +106,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                 case REQ_AT_MODE:
                     break;
                 case REQ_DT_MODE:
+                    GolfzonLogger.i("REQ_DT_MODE");
+                    setDtMode(true);
                     break;
                 case REQ_IS_MASTER:
                     GolfzonLogger.i("동글 마스터 설정 확인");
@@ -117,24 +123,29 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     break;
                 case REQ_SCAN_DEVICE:
                     GolfzonLogger.i("REQ_SCAN_DEVICE");
-                    requestThread.checkRetry();
+
                     String[] visionHomeFilter = result.second.split(" ");
 
                     List<String[]> scanResult = Arrays.stream(visionHomeFilter).filter(s -> s.contains("VisionHome")).map(s -> s.split(",")).collect(Collectors.toList());
 
                     if (!scanResult.isEmpty()) {
+                        GolfzonLogger.i("::::VisionHome 검색 결과 있음");
+                        requestThread.checkRetry();
                         String[] nearVisionHome = scanResult.stream().findFirst().get();
                         macAddress = nearVisionHome[0].split(":")[1];
                         GolfzonLogger.i("DEVICE INFO => " + nearVisionHome[0] + nearVisionHome[1] + nearVisionHome[2] + nearVisionHome[3] + nearVisionHome[4]);
                         dongleManager.setConnect(macAddress);
                     } else {
                         GolfzonLogger.i(":::::VisionHome 검색 안됨 처음부터 다시 시도");
-                        dongleManager.setAtMode();
+//                        dongleManager.setAtMode();
                     }
                     break;
 
                 case REQ_SET_CONNECTED:
                     GolfzonLogger.i("REQ_SET_CONNECTED");
+                    requestThread.checkRetry();
+
+                    dongleManager.setATtoDT();
                     break;
                 default:
             }

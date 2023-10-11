@@ -12,8 +12,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -405,6 +407,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 //            spn.append(HexDump.dumpHexString(data)).append("\n");
 //            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 //            receiveText.append(spn);
+            GolfzonLogger.i(":::send " + str);
             usbSerialPort.write(str.getBytes(Charset.defaultCharset()), WRITE_WAIT_MILLIS);
         } catch (Exception e) {
             onRunError(e);

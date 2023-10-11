@@ -67,48 +67,10 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 //            GolfzonLogger.i("Pattern not found.");
 //        }
 
-        replyCallToSender(this);
+//        replyCallToSender(this);
 
 
     }
-
-
-    public static void replyCallToSender(Context context) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Runtime runtime = Runtime.getRuntime();
-                Process process;
-                try {
-                    String cmd = "getprop ro.build.version.sdk";
-                    GolfzonLogger.i("cmd with call... = " + cmd);
-                    process = runtime.exec(cmd);
-                    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    String line = "";
-                    StringBuffer sb = new StringBuffer();
-                    while ((line = br.readLine()) != null) {
-                        GolfzonLogger.i("::line => " + line);
-                        sb.append(line + "\n");
-                    }
-                    // Bluetooth 버전 정보를 가져옵니다.
-                    GolfzonLogger.e("sb: " + sb);
-                    int index = sb.indexOf("Version:");
-                    String version = sb.substring(index + 8).trim();
-                    GolfzonLogger.e("[Succes] Bluetooth Version: " + version);
-                    br.close();
-
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    GolfzonLogger.e("Unable to execute top command " + e);
-                }
-            }
-        }).start();
-
-    }
-
-
 
     private void filterFeatureType(final String responseMessage) {
 

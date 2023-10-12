@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.DongleManager;
+import com.hoho.android.usbserial.core.DongleNoti;
 import com.hoho.android.usbserial.core.DongleState;
 import com.hoho.android.usbserial.core.SerialDataListener;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
@@ -141,7 +142,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             }
 
             @Override
-            public void onDongleState(DongleState state) {
+            public void onDongleState(DongleNoti state) {
                 writeLogMessage(state.name());
             }
         });
@@ -170,7 +171,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     @Override
     public void onDestroyView() {
         GolfzonLogger.i(":::onDestroyView");
-        dongleManager.getResponseManager().stop();
+//        dongleManager.getResponseManager().stop();
         super.onDestroyView();
     }
 

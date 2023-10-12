@@ -14,6 +14,8 @@ public class DongleManager {
 
     public void init() {
 
+        GolfzonLogger.i(":::requestThread " + requestThread + " responseManager " + responseManager);
+
 
         if (requestThread == null) {
             requestThread = new RequestThread(this);
@@ -71,14 +73,15 @@ public class DongleManager {
 
 
     public void setAtMode() {
-        responseManager.broadCastDongleState(DongleState.AT_MODE);
+        responseManager.broadCastDongleState(DongleNoti.AT_MODE);
         addQueueReqeustPacket(Feature.REQ_AT_MODE, (result, object) -> {
+            GolfzonLogger.e("REQ_AT_MODE >>>>>> " + result);
             if (requestThread != null) {
                 GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
                 requestThread.checkRetry();
                 isConnected();
             }
-        }, 3, 1000);
+        }, 3, 3000);
 
     }
 
@@ -91,7 +94,7 @@ public class DongleManager {
 
 
     public void setScanDevice() {
-        responseManager.broadCastDongleState(DongleState.BLE_SCAN_START);
+        responseManager.broadCastDongleState(DongleNoti.BLE_SCAN_START);
         addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE, (result, object) -> {
             GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
 
@@ -113,11 +116,11 @@ public class DongleManager {
                 }
 
             }
-        }, 1, 500);
+        }, 3, 500);
     }
 
     public void setConnect(String address) {
-        responseManager.broadCastDongleState(DongleState.BLE_CONNECTING);
+        responseManager.broadCastDongleState(DongleNoti.BLE_CONNECTING);
         addQueueReqeustPacket(Feature.REQ_SET_CONNECTED, address + "\r\n", new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
@@ -137,7 +140,6 @@ public class DongleManager {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = REQ_DT_MODE");
-
 
             }
         }, 3, 1000);

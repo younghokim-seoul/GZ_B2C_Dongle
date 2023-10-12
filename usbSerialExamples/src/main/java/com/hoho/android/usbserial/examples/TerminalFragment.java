@@ -75,9 +75,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private Button initButton;
     private Button sensingButton;
 
-    private Button dtActiveButton;
     private Button atActiveButton;
-    private Button isConnected;
 
     private Button activeVibration;
 
@@ -200,9 +198,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         initButton = view.findViewById(R.id.btn_init);
         sensingButton = view.findViewById(R.id.btn_sensing);
 
-        dtActiveButton = view.findViewById(R.id.btn_dt_mode);
         atActiveButton = view.findViewById(R.id.btn_at_mode);
-        isConnected = view.findViewById(R.id.btn_is_connect);
         activeVibration = view.findViewById(R.id.btn_vibration);
         logScrollView = view.findViewById(R.id.scroller);
 
@@ -214,7 +210,6 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         super.onViewCreated(view, savedInstanceState);
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
-        isConnected.setOnClickListener(v -> dongleManager.isConnected());
 
         atActiveButton.setOnClickListener(v -> dongleManager.setAtMode());
 

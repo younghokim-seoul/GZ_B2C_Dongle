@@ -14,6 +14,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         ServiceLocator.register(HGS_Client.class, HGS_ClientManager.getInstance().create(this));
-        ServiceLocator.register(DongleState.class,new DongleManager());
+        ServiceLocator.register(DongleManager.class,new DongleManager());
     }
 }

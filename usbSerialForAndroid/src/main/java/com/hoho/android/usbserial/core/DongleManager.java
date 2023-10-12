@@ -114,20 +114,6 @@ public class DongleManager {
 
             }
         }, 1, 500);
-//        addQueueReqeustPacket(Feature.REQ_AT_MODE, (result, object) -> {
-//            if (requestThread != null) {
-//                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-//                requestThread.checkRetry();
-//
-//                addQueueReqeustPacket(Feature.REQ_IS_CONNECTED , new RequestListener() {
-//                    @Override
-//                    public void onResult(int result, Object object) {
-//
-//
-//                    }
-//                }, 1, 500);
-//            }
-//        },  3, 1000);
     }
 
     public void setConnect(String address) {

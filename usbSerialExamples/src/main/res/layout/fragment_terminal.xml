@@ -38,12 +38,6 @@
             android:text="dtMode"/>
 
         <Button
-            android:id="@+id/btn_is_connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="isConnect"/>
-
-        <Button
             android:id="@+id/btn_vibration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

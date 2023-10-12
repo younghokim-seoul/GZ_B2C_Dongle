@@ -13,6 +13,8 @@ import com.hoho.android.usbserial.core.RealTimeDataChecker;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
@@ -33,6 +35,20 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             getSupportFragmentManager().beginTransaction().add(R.id.fragment, new DevicesFragment(), "devices").commit();
         else
             onBackStackChanged();
+
+        String test1= "AT+UDLP? +UDLP:0,\"com\",\"com1\",\"\" OK";
+        String test2= "AT+UDLP? +UDLP:0,\"com\",\"com1\",\"\" +UDLP:1,\"sps\",\"D4CA6EF5932Ap\",\"D4CA63F2C8F1p\" OK";
+        GolfzonLogger.i("::test1 => " + test1);
+
+        GolfzonLogger.i("::test2 => " + test2);
+
+        String[]test1Split = test1.split(" ");
+        String[]test2Split = test2.split(" ");
+
+        GolfzonLogger.i("::test1Split => " + test1Split.length);
+        GolfzonLogger.i("::test2Split => " + test2Split.length);
+
+
 
     }
 

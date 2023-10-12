@@ -6,7 +6,6 @@ import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -25,9 +24,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     private String macAddress = "";
 
 
-
-
-    public void stop(){
+    public void stop() {
         //data check stop
         checker.stop();
     }
@@ -57,15 +54,14 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
             String receivedData = new String(data, StandardCharsets.UTF_8);
 
 
-
-            if(dongleState == DongleState.DT_MODE){
+            if (dongleState == DongleState.DT_MODE) {
                 //data mode
-                if(serialDataListener != null) serialDataListener.onResult(data);
-            }else{
+                if (serialDataListener != null) serialDataListener.onResult(data);
+            } else {
                 //connect mode;
                 GolfzonLogger.e(":::Queue add NewData.. " + receivedData);
 
-                if(dongleManager.getRequestThread().getRequestTypeList().size() > 0){
+                if (dongleManager.getRequestThread().getRequestTypeList().size() > 0) {
                     Request request = dongleManager.getRequestThread().getRequestTypeList().getFirst();
                     checker.setCurrentRequest(request);
                     checker.setTimeoutMs(request.timeout);
@@ -84,8 +80,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     }
 
 
-    public void broadCastDongleState(DongleState state){
-        if(serialDataListener != null) serialDataListener.onDongleState(state);
+    public void broadCastDongleState(DongleState state) {
+        if (serialDataListener != null) serialDataListener.onDongleState(state);
     }
 
     private void handleDataCheckResult(Pair<String, String> result) throws Exception {
@@ -94,7 +90,6 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
         String[] packet = result.second.split(" ");
         String responseMessage = packet[0];
-
 
 
         Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
@@ -108,11 +103,31 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     dongleState = DongleState.AT_MODE;
                     break;
                 case REQ_DT_MODE:
-                    GolfzonLogger.i(">>>>>REQ_DT_MODE");
+                    GolfzonLogger.i("DATA 모드로 전환");
                     dongleState = DongleState.DT_MODE;
                     requestThread.checkRetry();
                     break;
+                case REQ_IS_CONNECTED:
+                    dongleState = DongleState.BLE_CONNECT_CHECK;
+                    GolfzonLogger.i("연결 상태 확인");
+
+                    String[] data = result.second.split(" ");
+
+                    if (data.length == 3) {
+                        GolfzonLogger.i("수신(연결 안되있을시)");
+                        dongleManager.isMasterCheck();
+                    } else {
+                        GolfzonLogger.i("수신(연결 되있을시)");
+                        String[] connectDevice = data[data.length - 1].split(",");
+
+                        GolfzonLogger.i("Dongle Address => " + connectDevice[connectDevice.length - 2]);
+                        GolfzonLogger.i("Board Address => " + connectDevice[connectDevice.length - 1]);
+                        dongleManager.setATtoDT();
+                    }
+
+                    break;
                 case REQ_IS_MASTER:
+                    dongleState = DongleState.MASTER_CHECK;
                     GolfzonLogger.i("동글 마스터 설정 확인");
                     String[] content = packet[1].split(":");
                     boolean isMaster = content[1].equalsIgnoreCase("1");
@@ -145,15 +160,15 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     break;
 
                 case REQ_SET_CONNECTED:
-                    GolfzonLogger.i("REQ_SET_CONNECTED");
+                    GolfzonLogger.i("BLE MAC 어드레스로 접속 시도");
 
-                    if(result.second.contains(macAddress)){
+                    if (result.second.contains(macAddress)) {
                         dongleState = DongleState.BLE_CONNECTED;
                         requestThread.checkRetry();
                         //ble connect success
                         GolfzonLogger.i("연결 성공");
                         dongleManager.setATtoDT();
-                    }else{
+                    } else {
                         //ble connect fail
                         GolfzonLogger.i("연결 실패");
                         dongleState = DongleState.BLE_CONNECT_FAIL;

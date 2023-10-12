@@ -31,7 +31,8 @@ import androidx.fragment.app.Fragment;
 
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.DongleManager;
-import com.hoho.android.usbserial.core.RawDataListener;
+import com.hoho.android.usbserial.core.DongleState;
+import com.hoho.android.usbserial.core.SerialDataListener;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
@@ -53,7 +54,6 @@ import co.golfzon.visionHome.SwingInfoGyro;
 import co.golfzon.visionHome.core.HGS_ClientManager;
 import co.golfzon.visionHome.core.interfaces.HGS_Client;
 import co.golfzon.visionHome.util.Converter;
-import co.golfzon.visionhome.BuildConfig;
 
 
 public class TerminalFragment extends Fragment implements SerialInputOutputManager.Listener {
@@ -79,6 +79,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private Button atActiveButton;
     private Button isConnected;
 
+    private Button activeVibration;
+
     private NestedScrollView logScrollView;
 
     private SerialInputOutputManager usbIoManager;
@@ -86,7 +88,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private UsbPermission usbPermission = UsbPermission.Unknown;
     private boolean connected = false;
 
-    private DongleManager requestManager;
+    private DongleManager dongleManager;
 
 
     private HGS_Client hgsClient;
@@ -94,6 +96,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private ExecutorService singpool;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS");
+
+    private final String SEPARATOR ="\r\n";
 
 
     public TerminalFragment() {
@@ -128,15 +132,19 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         GolfzonLogger.i(":::::::Terminal.... create");
 
 
-        hgsClient = HGS_ClientManager.getInstance().create(requireContext());
+        hgsClient = ServiceLocator.get(HGS_Client.class);
+        dongleManager = ServiceLocator.get(DongleManager.class);
 
-        requestManager = new DongleManager();
-        requestManager.init();
-        requestManager.getResponseManager().setDtMode(false);
-        requestManager.getResponseManager().setRawDataListener(new RawDataListener() {
+        dongleManager.init();
+        dongleManager.getResponseManager().setSerialDataListener(new SerialDataListener() {
             @Override
             public void onResult(byte[] raw) {
                 singpool.execute(() -> hgsClient.HGSComputeData(raw));
+            }
+
+            @Override
+            public void onDongleState(DongleState state) {
+                writeLogMessage(state.name());
             }
         });
         singpool = Executors.newSingleThreadExecutor();
@@ -159,6 +167,13 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         }
         getActivity().unregisterReceiver(broadcastReceiver);
         super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        GolfzonLogger.i(":::onDestroyView");
+        dongleManager.getResponseManager().stop();
+        super.onDestroyView();
     }
 
     /*
@@ -188,6 +203,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         dtActiveButton = view.findViewById(R.id.btn_dt_mode);
         atActiveButton = view.findViewById(R.id.btn_at_mode);
         isConnected = view.findViewById(R.id.btn_is_connect);
+        activeVibration = view.findViewById(R.id.btn_vibration);
         logScrollView = view.findViewById(R.id.scroller);
 
         return view;
@@ -198,45 +214,21 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         super.onViewCreated(view, savedInstanceState);
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
-        isConnected.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestManager.isConnected();
-            }
-        });
+        isConnected.setOnClickListener(v -> dongleManager.isConnected());
 
-        atActiveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestManager.setAtMode();
-            }
-        });
+        atActiveButton.setOnClickListener(v -> dongleManager.setAtMode());
 
-        dtActiveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                send("ATO1" + "\r\n");
-            }
-        });
-        initButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hgsClient.HGSInitSensor();
-            }
-        });
+        initButton.setOnClickListener(v -> hgsClient.HGSInitSensor());
 
-        sensingButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hgsClient.HGSSensingStart();
-            }
-        });
+        sensingButton.setOnClickListener(v -> hgsClient.HGSSensingStart());
+
+        activeVibration.setOnClickListener(v -> send("#pg"));
 
         hgsClient.setHSGSSensorListener(new HGSSensorListener() {
             @Override
             public void onSendDeviceCmd(@NonNull String s) {
                 GolfzonLogger.i("::::onSendDeviceCmd " + s);
-                send(s + "\r\n");
+                send(s);
             }
 
             @Override
@@ -251,6 +243,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 writeLogMessage(hgsNoti.toString());
             }
         });
+
     }
 
     @Override
@@ -290,14 +283,12 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
      */
     @Override
     public void onNewData(byte[] data) {
-        mainLooper.post(() -> {
-            try {
-                String packet = Converter.ByteArrayToHexString(data);
-                writeLogMessage(packet);
-            } catch (Exception e) {
-                GolfzonLogger.e(":::e " + e);
-            }
-        });
+        try {
+            String packet = Converter.ByteArrayToHexString(data);
+            writeLogMessage(packet);
+        } catch (Exception e) {
+            GolfzonLogger.e(":::e " + e);
+        }
     }
 
     @Override
@@ -360,14 +351,14 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 status("unsupport setparameters");
             }
             if (withIoManager) {
-                usbIoManager = new SerialInputOutputManager(usbSerialPort, requestManager.getResponseManager());
+                usbIoManager = new SerialInputOutputManager(usbSerialPort, dongleManager.getResponseManager());
                 usbIoManager.start();
             }
             status("connected");
             connected = true;
             controlLines.start();
 
-            requestManager.setUsbSerialPort(usbSerialPort);
+            dongleManager.setUsbSerialPort(usbSerialPort);
 
 
         } catch (Exception e) {
@@ -389,8 +380,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         } catch (IOException ignored) {
         }
         usbSerialPort = null;
-        requestManager.setUsbSerialPort(null);
-        requestManager.getRequestThread().closeAll();
+        dongleManager.setUsbSerialPort(null);
+        dongleManager.getRequestThread().closeAll();
+
     }
 
     private void send(String str) {
@@ -399,14 +391,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
             return;
         }
         try {
-//        byte[] data = (str + '\n').getBytes();
-//            SpannableStringBuilder spn = new SpannableStringBuilder();
-//            spn.append("send " + data.length + " bytes\n");
-//            spn.append(HexDump.dumpHexString(data)).append("\n");
-//            spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            receiveText.append(spn);
-            GolfzonLogger.i(":::send " + str);
-            usbSerialPort.write(str.getBytes(Charset.defaultCharset()), WRITE_WAIT_MILLIS);
+//            writeLogMessage(str);
+            String sendPacket = str + SEPARATOR;
+            usbSerialPort.write(sendPacket.getBytes(Charset.defaultCharset()), WRITE_WAIT_MILLIS);
         } catch (Exception e) {
             onRunError(e);
         }
@@ -431,11 +418,15 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
 
     private void writeLogMessage(String log) {
-        String date = dateFormat.format(System.currentTimeMillis());
-        receiveText.append("[" + date + "] " + log + "\n");
-        if (receiveText.getMeasuredHeight() - logScrollView.getScrollY() <= logScrollView.getHeight() + receiveText.getLineHeight()) {
-            logScrollView.post(() -> logScrollView.scrollTo(0, receiveText.getBottom()));
-        }
+        mainLooper.post(() -> {
+
+            String date = dateFormat.format(System.currentTimeMillis());
+            receiveText.append("[" + date + "] " + log + "\n");
+            if (receiveText.getMeasuredHeight() - logScrollView.getScrollY() <= logScrollView.getHeight() + receiveText.getLineHeight()) {
+                logScrollView.post(() -> logScrollView.scrollTo(0, receiveText.getBottom()));
+            }
+        });
+
     }
 
     private void receive(byte[] data) {
@@ -448,8 +439,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     }
 
     void status(String str) {
-        SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
-        writeLogMessage(spn.toString());
+        writeLogMessage(str);
     }
 
     class ControlLines {
@@ -515,12 +505,18 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 return;
             try {
                 EnumSet<UsbSerialPort.ControlLine> controlLines = usbSerialPort.getSupportedControlLines();
-                if (!controlLines.contains(UsbSerialPort.ControlLine.RTS)) rtsBtn.setVisibility(View.INVISIBLE);
-                if (!controlLines.contains(UsbSerialPort.ControlLine.CTS)) ctsBtn.setVisibility(View.INVISIBLE);
-                if (!controlLines.contains(UsbSerialPort.ControlLine.DTR)) dtrBtn.setVisibility(View.INVISIBLE);
-                if (!controlLines.contains(UsbSerialPort.ControlLine.DSR)) dsrBtn.setVisibility(View.INVISIBLE);
-                if (!controlLines.contains(UsbSerialPort.ControlLine.CD)) cdBtn.setVisibility(View.INVISIBLE);
-                if (!controlLines.contains(UsbSerialPort.ControlLine.RI)) riBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.RTS))
+                    rtsBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.CTS))
+                    ctsBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.DTR))
+                    dtrBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.DSR))
+                    dsrBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.CD))
+                    cdBtn.setVisibility(View.INVISIBLE);
+                if (!controlLines.contains(UsbSerialPort.ControlLine.RI))
+                    riBtn.setVisibility(View.INVISIBLE);
                 run();
             } catch (Exception e) {
                 Toast.makeText(getActivity(), "getSupportedControlLines() failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();

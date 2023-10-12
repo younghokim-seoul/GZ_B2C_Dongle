@@ -15,13 +15,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class RealTimeDataChecker {
 
-    private final ExecutorService taskExecutor; // 스레드 풀
+    private final ExecutorService taskExecutor;
     private final BlockingQueue<String> dataQueue;
     private final ExecutorService timerExecutor;
 
     private DataCheckerCallback callback;
 
     private int timeoutMs = -1;
+
+    private Request currentRequest;
 
 
     public interface DataCheckerCallback {
@@ -44,6 +46,9 @@ public class RealTimeDataChecker {
     public void setTimeoutMs(int timeoutMs) {
         this.timeoutMs = timeoutMs;
     }
+    public void setCurrentRequest(Request currentRequest) {
+        this.currentRequest = currentRequest;
+    }
 
     public void onReceiveData(String data) {
         dataQueue.add(data);
@@ -55,7 +60,7 @@ public class RealTimeDataChecker {
             while (true) {
                 try {
                     if (timeoutMs > 0) {
-                        Pair<String, String> result = checkRealTimeData(timeoutMs);
+                        Pair<String, String> result = checkRealTimeData(timeoutMs,currentRequest.packetSize);
 
                         timeoutMs = -1;
 
@@ -80,12 +85,15 @@ public class RealTimeDataChecker {
     }
 
     public void stop() {
-        timerExecutor.shutdownNow();
+        GolfzonLogger.i("::::executor shutdown");
+        timerExecutor.shutdown();
+        taskExecutor.shutdown();
+
     }
 
     // 실시간 데이터 검사를 수행하는 메서드
-    public Pair<String, String> checkRealTimeData(int timeout) throws InterruptedException, ExecutionException {
-        Future<Pair<String, String>> future = taskExecutor.submit(new DataCheckerTask(dataQueue, timeout));
+    public Pair<String, String> checkRealTimeData(int timeout, int packetSize) throws InterruptedException, ExecutionException {
+        Future<Pair<String, String>> future = taskExecutor.submit(new DataCheckerTask(dataQueue, timeout,packetSize));
         return future.get();
     }
 
@@ -107,10 +115,13 @@ public class RealTimeDataChecker {
         private final BlockingQueue<String> dataQueue;
         private final int timeoutMs;
 
+        private final int packetSize;
 
-        public DataCheckerTask(BlockingQueue<String> dataQueue, int timeoutMs) {
+
+        public DataCheckerTask(BlockingQueue<String> dataQueue, int timeoutMs, int packetSize) {
             this.dataQueue = dataQueue;
             this.timeoutMs = timeoutMs;
+            this.packetSize = packetSize;
         }
 
         @Override
@@ -124,12 +135,17 @@ public class RealTimeDataChecker {
                 if (data != null) {
                     dataBuilder.append(data);
                     String removeNewLine = parseSerialData(dataBuilder.toString());
-//                    GolfzonLogger.i("removeNewLine = " + removeNewLine);
-                    if (removeNewLine.endsWith("OK")) {
 
-//                        GolfzonLogger.e(":::::ok 데이터 " + dataBuilder.toString());
-                        return new Pair<>("OK", removeNewLine);
+                    if(packetSize >= 3){
+                        if (removeNewLine.endsWith("244") || removeNewLine.endsWith("-1")) {
+                            return new Pair<>("OK", removeNewLine);
+                        }
+                    }else{
+                        if (removeNewLine.endsWith("OK")) {
+                            return new Pair<>("OK", removeNewLine);
+                        }
                     }
+
                 }
 
                 long currentTime = System.currentTimeMillis();

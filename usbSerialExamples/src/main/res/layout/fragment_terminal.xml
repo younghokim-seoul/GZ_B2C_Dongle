@@ -13,6 +13,12 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/btn_at_mode"
+            android:layout_width="wrap_content"
+            android:text="scanStart"
+            android:layout_height="wrap_content"/>
+
+        <Button
             android:id="@+id/btn_init"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -25,15 +31,10 @@
             android:text="sensing"/>
 
         <Button
-            android:id="@+id/btn_at_mode"
-            android:layout_width="wrap_content"
-            android:text="atMode"
-            android:layout_height="wrap_content"/>
-
-        <Button
             android:id="@+id/btn_dt_mode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:text="dtMode"/>
 
         <Button
@@ -41,6 +42,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="isConnect"/>
+
+        <Button
+            android:id="@+id/btn_vibration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="vibration"/>
 
     </LinearLayout>
 

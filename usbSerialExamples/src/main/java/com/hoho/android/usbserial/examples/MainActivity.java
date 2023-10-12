@@ -34,52 +34,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         else
             onBackStackChanged();
 
-
-        String inputString = "AT+UDCP=sps://A1DPFDAS356p";
-//
-//        // 정규식 패턴을 정의합니다.
-//        String regexPattern = "sps://([A-Za-z0-9]+)";
-//
-//        // 패턴을 컴파일합니다.
-//        Pattern pattern = Pattern.compile(regexPattern);
-//
-//        // 입력 문자열에서 패턴과 매치되는 부분을 찾습니다.
-//        Matcher matcher = pattern.matcher(inputString);
-//
-//        // 매치가 발견되었을 때 추출합니다.
-//        if (matcher.find()) {
-//            String result = matcher.group(1); // 첫 번째 그룹을 가져옵니다.
-//            String type = matcher.group(0); // 첫 번째 그룹을 가져옵니다.
-//            GolfzonLogger.i(":::result.. " + result );
-//            GolfzonLogger.i(":::type.. " + type );
-//        } else {
-//            GolfzonLogger.i("Pattern not found.");
-//        }
-
-//        replyCallToSender(this);
-
-
     }
-
-    private void filterFeatureType(final String responseMessage) {
-
-
-
-        Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
-            String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
-            return featureEnum.getKey().equalsIgnoreCase(key);
-        }).findFirst();
-
-
-        if (feature.isPresent()) {
-            Feature feature1 = feature.get();
-
-            GolfzonLogger.i(":::feature1 : " + feature1);
-            GolfzonLogger.e(":::mainMsg : " + responseMessage);
-        }
-
-    }
-
 
     @Override
     public void onBackStackChanged() {

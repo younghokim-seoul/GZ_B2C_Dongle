@@ -3,16 +3,16 @@ package com.hoho.android.usbserial.core;
 import java.util.HashMap;
 
 public enum Feature {
-    REQ_AT_MODE("+++","ok"),
-    REQ_DT_MODE("ATO1\r\n","ATO1"),
-    REQ_IS_MASTER("AT+UBTLE?\r\n","AT+UBTLE?"),
+    REQ_AT_MODE("+++","ok",0),
+    REQ_DT_MODE("ATO1\r\n","ATO1",0),
+    REQ_IS_MASTER("AT+UBTLE?\r\n","AT+UBTLE?",0),
 
-    REQ_SET_MASTER( "AT+UBTLE=1\r\n", "AT+UBTLE=1"),
+    REQ_SET_MASTER( "AT+UBTLE=1\r\n", "AT+UBTLE=1",0),
 
-    REQ_RESET("AT+CPWROFF\r\n","AT+CPWROFF"),
-    REQ_SCAN_DEVICE("AT+UBTD=4,1\r\n","AT+UBTD=4,1"),
-    REQ_SET_CONNECTED("AT+UDCP=sps://","AT+UDCP=sps://"),
-    REQ_IS_CONNECTED("AT+UDLP?\r\n","AT+UDLP?");
+    REQ_RESET("AT+CPWROFF\r\n","AT+CPWROFF",3),
+    REQ_SCAN_DEVICE("AT+UBTD=4,1\r\n","AT+UBTD=4,1",0),
+    REQ_SET_CONNECTED("AT+UDCP=sps://","AT+UDCP=sps://",5),
+    REQ_IS_CONNECTED("AT+UDLP?\r\n","AT+UDLP?",0);
 
 
 
@@ -20,11 +20,14 @@ public enum Feature {
     final String reqMsg;
     final String resMsg;
 
+    final int contentSize;
 
 
-    Feature(String reqMsg, String resMsg) {
+
+    Feature(String reqMsg, String resMsg,int contentSize) {
         this.reqMsg = reqMsg;
         this.resMsg = resMsg;
+        this.contentSize = contentSize;
     }
 
     public String getReqMsg() {

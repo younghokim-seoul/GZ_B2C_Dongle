@@ -7,6 +7,8 @@ public class Request {
     int timeout;
 
     int maxCount;
+
+    int packetSize;
     RequestListener requestListener;
 
 
@@ -17,11 +19,12 @@ public class Request {
 
 
 
-    public Request(String type, String packet, int timeout, int maxCount, RequestListener requestListener) {
+    public Request(String type, String packet, int timeout, int maxCount,int packetSize ,RequestListener requestListener) {
         this.type = type;
         this.packet = packet;
         this.timeout = timeout;
         this.maxCount = maxCount;
+        this.packetSize = packetSize;
         this.requestListener = requestListener;
 
     }
@@ -33,6 +36,7 @@ public class Request {
                 ", packet='" + packet + '\'' +
                 ", timeout=" + timeout +
                 ", maxCount=" + maxCount +
+                ", packetSize=" + packetSize +
                 ", requestListener=" + requestListener +
                 '}';
     }

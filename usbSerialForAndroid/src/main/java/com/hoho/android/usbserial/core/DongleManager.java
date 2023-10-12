@@ -12,7 +12,6 @@ public class DongleManager {
     private UsbSerialPort usbSerialPort;
 
 
-
     public void init() {
 
 
@@ -43,29 +42,41 @@ public class DongleManager {
         return requestThread;
     }
 
-    private void addQueueReqeustPacket(String type, String packet, RequestListener requestListener, int retryCount, int... timeout) {
-        GolfzonLogger.e(">>>>>>main = " + type);
-        GolfzonLogger.e(">>>>>>sub = " + packet);
+    private void addQueueReqeustPacket(Feature feature, RequestListener requestListener, int retryCount, int... timeout) {
+        GolfzonLogger.e(">>>>>>main = " + feature.name());
+        GolfzonLogger.e(">>>>>>sub = " + feature.getReqMsg());
         GolfzonLogger.e(">>>>>>timeout  = " + timeout[0]);
         GolfzonLogger.e(">>>>>>retryCount  = " + retryCount);
-        if (packet == null) {
+        if (feature.getReqMsg() == null) {
+            requestListener.onResult(ResultCode.FAIL, null);
+            return;
+        }
+        requestThread.addRequestList(new Request(feature.name(), feature.getReqMsg(), timeout[0], retryCount, feature.contentSize, requestListener));
+        requestThread.start();
+    }
+
+    private void addQueueReqeustPacket(Feature feature, String address, RequestListener requestListener, int retryCount, int... timeout) {
+        GolfzonLogger.e(">>>>>>main = " + feature.name());
+        GolfzonLogger.e(">>>>>>sub = " + feature.getReqMsg());
+        GolfzonLogger.e(">>>>>>timeout  = " + timeout[0]);
+        GolfzonLogger.e(">>>>>>retryCount  = " + retryCount);
+        if (feature.getReqMsg() == null) {
             requestListener.onResult(ResultCode.FAIL, null);
             return;
         }
 
-
-        requestThread.addRequestList(new Request(type, packet, timeout[0], retryCount, requestListener));
+        requestThread.addRequestList(new Request(feature.name(), feature.getReqMsg() + address, timeout[0], retryCount, feature.contentSize, requestListener));
         requestThread.start();
     }
 
 
     public void setAtMode() {
-
-        addQueueReqeustPacket(Feature.REQ_AT_MODE.name(), Feature.REQ_AT_MODE.getReqMsg(), (result, object) -> {
+        responseManager.broadCastDongleState(DongleState.AT_MODE);
+        addQueueReqeustPacket(Feature.REQ_AT_MODE, (result, object) -> {
             if (requestThread != null) {
                 GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
                 requestThread.checkRetry();
-                isMasterCheck();
+                isConnected();
             }
         }, 3, 1000);
 
@@ -73,49 +84,70 @@ public class DongleManager {
 
 
     public void isMasterCheck() {
-        addQueueReqeustPacket(Feature.REQ_IS_MASTER.name(), Feature.REQ_IS_MASTER.getReqMsg(), (result, object) -> {
+        addQueueReqeustPacket(Feature.REQ_IS_MASTER, (result, object) -> {
 
         }, 3, 1000);
     }
 
 
     public void setScanDevice() {
-        addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE.name(), Feature.REQ_SCAN_DEVICE.getReqMsg(), (result, object) -> {
-                GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
+        responseManager.broadCastDongleState(DongleState.BLE_SCAN_START);
+        addQueueReqeustPacket(Feature.REQ_SCAN_DEVICE, (result, object) -> {
+            GolfzonLogger.e("feature = REQ_SCAN_DEVICE");
 
         }, 3, 10000);
     }
 
 
     public void isConnected() {
-        addQueueReqeustPacket(Feature.REQ_AT_MODE.name(), Feature.REQ_AT_MODE.getReqMsg(), (result, object) -> {
-            if (requestThread != null) {
-                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-                requestThread.checkRetry();
-
-                addQueueReqeustPacket(Feature.REQ_IS_CONNECTED.name(), Feature.REQ_IS_CONNECTED.getReqMsg(), new RequestListener() {
-                    @Override
-                    public void onResult(int result, Object object) {
-
-
+        addQueueReqeustPacket(Feature.REQ_IS_CONNECTED, new RequestListener() {
+            @Override
+            public void onResult(int result, Object object) {
+                GolfzonLogger.e("feature = REQ_IS_CONNECTED");
+                if(result == ResultCode.SUCCESS){
+                    if (requestThread != null) {
+                        GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+                        requestThread.checkRetry();
+                        isMasterCheck();
                     }
-                }, 1, 500);
+                }
+
             }
-        },  3, 1000);
+        }, 1, 500);
+//        addQueueReqeustPacket(Feature.REQ_AT_MODE, (result, object) -> {
+//            if (requestThread != null) {
+//                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+//                requestThread.checkRetry();
+//
+//                addQueueReqeustPacket(Feature.REQ_IS_CONNECTED , new RequestListener() {
+//                    @Override
+//                    public void onResult(int result, Object object) {
+//
+//
+//                    }
+//                }, 1, 500);
+//            }
+//        },  3, 1000);
     }
 
     public void setConnect(String address) {
-        addQueueReqeustPacket(Feature.REQ_SET_CONNECTED.name(), Feature.REQ_SET_CONNECTED.getReqMsg() + address + "\r\n", new RequestListener() {
+        responseManager.broadCastDongleState(DongleState.BLE_CONNECTING);
+        addQueueReqeustPacket(Feature.REQ_SET_CONNECTED, address + "\r\n", new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = REQ_SET_CONNECTED");
+                if (result == ResultCode.REQUEST_TIMEOUT_ERROR) {
+                    setScanDevice();
+                } else {
+                    requestThread.checkRetry();
+                }
 
             }
         }, 3, 5000);
     }
 
-    public void setATtoDT(){
-        addQueueReqeustPacket(Feature.REQ_DT_MODE.name(), Feature.REQ_DT_MODE.getReqMsg(), new RequestListener() {
+    public void setATtoDT() {
+        addQueueReqeustPacket(Feature.REQ_DT_MODE, new RequestListener() {
             @Override
             public void onResult(int result, Object object) {
                 GolfzonLogger.e("feature = REQ_DT_MODE");

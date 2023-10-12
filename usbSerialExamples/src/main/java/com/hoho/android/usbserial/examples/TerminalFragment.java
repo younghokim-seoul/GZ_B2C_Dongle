@@ -76,7 +76,11 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private Button initButton;
     private Button sensingButton;
 
-    private Button atActiveButton;
+    private Button bleDisconnectButton;
+
+    private Button sensingStopButton;
+
+    private Button bleScanButton;
 
     private Button activeVibration;
 
@@ -96,7 +100,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS");
 
-    private final String SEPARATOR ="\r\n";
+    private final String SEPARATOR = "\r\n";
 
 
     public TerminalFragment() {
@@ -161,7 +165,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     @Override
     public void onPause() {
         if (connected) {
-            status("disconnected");
+            status("USB Port Close");
             disconnect();
         }
         getActivity().unregisterReceiver(broadcastReceiver);
@@ -198,10 +202,13 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
 
         initButton = view.findViewById(R.id.btn_init);
         sensingButton = view.findViewById(R.id.btn_sensing);
-
-        atActiveButton = view.findViewById(R.id.btn_at_mode);
+        sensingStopButton = view.findViewById(R.id.btn_sensing_stop);
+        bleScanButton = view.findViewById(R.id.btn_at_mode);
+        bleDisconnectButton = view.findViewById(R.id.btn_disconnect);
         activeVibration = view.findViewById(R.id.btn_vibration);
         logScrollView = view.findViewById(R.id.scroller);
+
+        initButton.setVisibility(hgsClient.isSensorConnected() ? View.GONE : View.VISIBLE);
 
         return view;
     }
@@ -212,31 +219,56 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         GolfzonLogger.i("::::::::TerminalFragment>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
 
-        atActiveButton.setOnClickListener(v -> dongleManager.setAtMode());
+        bleScanButton.setOnClickListener(v -> dongleManager.setAtMode());
 
-        initButton.setOnClickListener(v -> hgsClient.HGSInitSensor());
-
-        sensingButton.setOnClickListener(v -> hgsClient.HGSSensingStart());
+        initButton.setOnClickListener(v -> {
+            if(!hgsClient.isSensorConnected()){
+                hgsClient.HGSInitSensor();
+            }
+        });
 
         activeVibration.setOnClickListener(v -> send("#pg"));
+
+        bleDisconnectButton.setOnClickListener(v -> dongleManager.setDisconnect());
+
+        sensingButton.setOnClickListener(v -> {
+            if (!hgsClient.isSensing()) {
+                hgsClient.HGSSensingStart();
+            }
+        });
+
+        sensingStopButton.setOnClickListener(v -> {
+            if (hgsClient.isSensing()) {
+                hgsClient.HGSSensingStop();
+            }
+        });
 
         hgsClient.setHSGSSensorListener(new HGSSensorListener() {
             @Override
             public void onSendDeviceCmd(@NonNull String s) {
-                GolfzonLogger.i("::::onSendDeviceCmd " + s);
                 send(s);
             }
 
             @Override
             public void onReceiveData(@NonNull SwingInfoGyro swingInfoGyro) {
-                GolfzonLogger.i(":::swingInfoGyro " + swingInfoGyro.toString());
                 writeLogMessage(swingInfoGyro.toString());
             }
 
             @Override
             public void onReceiveEvent(@NonNull HGSNoti hgsNoti) {
-                GolfzonLogger.i(":::hgsNoti " + hgsNoti);
                 writeLogMessage(hgsNoti.toString());
+
+                switch (hgsNoti) {
+                    case NOTI_SENSOR_MONITORING_START:
+                        dongleManager.setDongleState(DongleState.DATA_GATHERING);
+                        break;
+                    case NOTI_SENSOR_MONITORING_STOP:
+                        dongleManager.setDongleState(DongleState.CONNECT);
+                        break;
+                    case NOTI_GYRO_DISCONNECTED_ERROR:
+                        dongleManager.setDongleState(DongleState.DISCONNECT);
+                        break;
+                }
             }
         });
 
@@ -350,7 +382,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 usbIoManager = new SerialInputOutputManager(usbSerialPort, dongleManager.getResponseManager());
                 usbIoManager.start();
             }
-            status("connected");
+            status("USB Port Open");
             connected = true;
             controlLines.start();
 
@@ -364,6 +396,8 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     }
 
     private void disconnect() {
+        hgsClient.HGSSensingStop();
+
         connected = false;
         controlLines.stop();
         if (usbIoManager != null) {

@@ -19,16 +19,28 @@
             android:layout_height="wrap_content"/>
 
         <Button
+            android:id="@+id/btn_disconnect"
+            android:layout_width="wrap_content"
+            android:text="Disconnect"
+            android:layout_height="wrap_content"/>
+
+        <Button
             android:id="@+id/btn_init"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="init"/>
+            android:text="algorithm connect"/>
 
         <Button
             android:id="@+id/btn_sensing"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="sensing"/>
+            android:text="sensing start"/>
+
+        <Button
+            android:id="@+id/btn_sensing_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sensing stop"/>
 
         <Button
             android:id="@+id/btn_dt_mode"

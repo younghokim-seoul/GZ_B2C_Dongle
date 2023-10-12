@@ -15,18 +15,41 @@ android {
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion 33
+        versionCode 1
+        versionName "1.0.0"
         vectorDrawables.useSupportLibrary = true
 
         missingDimensionStrategy 'device', 'anyDevice'
 
     }
 
+    signingConfigs {
+        releaseWithProps {
+            storeFile file("signature/partronwb.jks")
+            storePassword keystore_pass
+            keyAlias key_alias
+            keyPassword key_pass
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.releaseWithProps
             minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
     namespace 'com.hoho.android.usbserial.examples'
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            def date = new Date();
+            def formattedDate = date.format('yyyy-MM-dd')
+
+            outputFileName = formattedDate+"-${variant.name}-${variant.applicationId}-${variant.versionName}.apk"
+        }
+    }
+
 }
 
 dependencies {

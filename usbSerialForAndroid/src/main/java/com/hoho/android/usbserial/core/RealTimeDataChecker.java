@@ -137,7 +137,7 @@ public class RealTimeDataChecker {
                     String removeNewLine = parseSerialData(dataBuilder.toString());
 
                     if(packetSize >= 3){
-                        if (removeNewLine.endsWith("244") || removeNewLine.endsWith("-1")) {
+                        if (removeNewLine.endsWith("244")) {
                             return new Pair<>("OK", removeNewLine);
                         }
                     }else{

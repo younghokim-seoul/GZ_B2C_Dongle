@@ -6,11 +6,13 @@ import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ResponseManager implements SerialInputOutputManager.Listener, RealTimeDataChecker.DataCheckerCallback {
 
@@ -52,7 +54,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
         try {
             // 수신한 데이터를 큐에 추가
 
-            String receivedData = new String(data, StandardCharsets.UTF_8);
+            String receivedData = new String(data);
 
             if (dongleState == DongleState.DATA_GATHERING) {
                 //data mode
@@ -92,13 +94,19 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
         String responseMessage = packet[0];
 
 
-        Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
-            String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
-            return featureEnum.getKey().equalsIgnoreCase(key);
-        }).findFirst();
 
-        if (feature.isPresent()) {
-            switch (feature.get()) {
+//        Optional<Feature> feature = Arrays.stream(Feature.values()).filter(featureEnum -> {
+//            String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
+//            return featureEnum.getKey().equalsIgnoreCase(key);
+//        }).findFirst();
+
+        String key = responseMessage.startsWith(Feature.REQ_SET_CONNECTED.getKey()) ? Feature.REQ_SET_CONNECTED.getKey() : responseMessage;
+        Feature filterFeature = Feature.byKey(key);
+
+
+
+        if (filterFeature != null) {
+            switch (filterFeature) {
                 case REQ_AT_MODE:
                     GolfzonLogger.i("DATA MODE -> AT MODE 전환");
                     dongleNoti = DongleNoti.AT_MODE;
@@ -147,12 +155,23 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     dongleNoti = DongleNoti.BLE_SCAN_FINISHED;
                     String[] visionHomeFilter = result.second.split(" ");
 
-                    List<String[]> scanResult = Arrays.stream(visionHomeFilter).filter(s -> s.contains("VisionHome")).map(s -> s.split(",")).collect(Collectors.toList());
+//                    List<String[]> scanResult = Arrays.stream(visionHomeFilter).filter(s -> s.contains("VisionHome")).map(s -> s.split(",")).collect(Collectors.toList());
+
+                    List<String[]> scanResult = new ArrayList<>();
+
+                    for(int i =0 ; i < visionHomeFilter.length ;i ++){
+                        String s = visionHomeFilter[i];
+                        if(s.contains("VisionHome")){
+                            String[] deviceInfo = s.split(",");
+                            scanResult.add(deviceInfo);
+                        }
+                    }
 
                     if (!scanResult.isEmpty()) {
                         GolfzonLogger.i("::::VisionHome 검색 결과 있음");
                         requestThread.checkRetry();
-                        String[] nearVisionHome = scanResult.stream().findFirst().get();
+//                        String[] nearVisionHome = scanResult.stream().findFirst().get();
+                        String[] nearVisionHome = scanResult.get(0);
                         macAddress = nearVisionHome[0].split(":")[1];
                         GolfzonLogger.i("DEVICE INFO => " + nearVisionHome[0] + nearVisionHome[1] + nearVisionHome[2] + nearVisionHome[3] + nearVisionHome[4]);
                         dongleManager.setConnect(macAddress);

@@ -410,6 +410,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         usbSerialPort = null;
         dongleManager.setUsbSerialPort(null);
         dongleManager.getRequestThread().closeAll();
+        dongleManager.getRequestThread().closeAll();
     }
     private void disconnect() {
         hgsClient.HGSSensingStop();

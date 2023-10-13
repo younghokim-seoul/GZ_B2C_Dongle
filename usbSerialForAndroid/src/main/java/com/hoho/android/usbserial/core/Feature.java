@@ -12,7 +12,8 @@ public enum Feature {
     REQ_RESET("AT+CPWROFF\r\n","AT+CPWROFF",3),
     REQ_SCAN_DEVICE("AT+UBTD=4,1\r\n","AT+UBTD=4,1",0),
     REQ_SET_CONNECTED("AT+UDCP=sps://","AT+UDCP=sps://",5),
-    REQ_IS_CONNECTED("AT+UDLP?\r\n","AT+UDLP?",0);
+    REQ_IS_CONNECTED("AT+UDLP?\r\n","AT+UDLP?",0),
+    REQ_SET_DISCONNECTED("AT+UDCPC=1\\r\\n", "AT+UDCPC=1",0);
 
 
 

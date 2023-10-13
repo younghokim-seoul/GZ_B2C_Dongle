@@ -18,22 +18,20 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     private final DongleManager dongleManager;
 
     private final RealTimeDataChecker checker;
-    private DongleState dongleState = DongleState.Disconnect;
+    private DongleState dongleState = DongleState.DISCONNECT;
 
     private DongleNoti dongleNoti = DongleNoti.NONE;
     private SerialDataListener serialDataListener;
 
-
     private String macAddress = "";
 
 
-    public void stop() {
-        //data check stop
-        checker.stop();
-    }
-
     public void setSerialDataListener(SerialDataListener serialDataListener) {
         this.serialDataListener = serialDataListener;
+    }
+
+    public void setDongleState(DongleState dongleState) {
+        this.dongleState = dongleState;
     }
 
     public ResponseManager(
@@ -56,10 +54,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
             String receivedData = new String(data, StandardCharsets.UTF_8);
 
-//            GolfzonLogger.e(":::dongleState " + dongleState);
-//            GolfzonLogger.e(":::receivedData " + receivedData);
 
-            if (dongleState == DongleState.DataGathering) {
+            if (dongleState == DongleState.DATA_GATHERING) {
                 //data mode
                 if (serialDataListener != null) serialDataListener.onResult(data);
             } else {
@@ -84,8 +80,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     }
 
 
-    public void broadCastDongleState(DongleNoti state) {
-        if (serialDataListener != null) serialDataListener.onDongleState(state);
+    public void broadCastDongleNoti(DongleNoti noti) {
+        if (serialDataListener != null) serialDataListener.onDongleState(noti);
     }
 
     private void handleDataCheckResult(Pair<String, String> result) throws Exception {
@@ -110,7 +106,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                 case REQ_DT_MODE:
                     GolfzonLogger.i("DATA 모드로 전환");
                     dongleNoti = DongleNoti.DT_MODE;
-                    dongleState = DongleState.DataGathering;
+                    dongleState = DongleState.CONNECT;
                     requestThread.checkRetry();
                     break;
                 case REQ_IS_CONNECTED:
@@ -122,13 +118,13 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     requestThread.checkRetry();
                     if (data.length == 3) {
                         GolfzonLogger.i("수신(연결 안되있을시)");
-                        dongleState = DongleState.Disconnect;
+                        dongleState = DongleState.DISCONNECT;
                         dongleManager.isMasterCheck();
                     } else {
                         GolfzonLogger.i("수신(연결 되있을시)");
                         String[] connectDevice = data[data.length - 2].split(",");
-                        macAddress = connectDevice[connectDevice.length-1];
-                        dongleState = DongleState.Connect;
+                        macAddress = connectDevice[connectDevice.length - 1];
+                        dongleState = DongleState.CONNECT;
                         dongleManager.setATtoDT();
                     }
 
@@ -147,7 +143,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     }
                     break;
                 case REQ_SCAN_DEVICE:
-                    GolfzonLogger.i("REQ_SCAN_DEVICE");
+                    GolfzonLogger.i("스캔 시작..");
                     dongleNoti = DongleNoti.BLE_SCAN_FINISHED;
                     String[] visionHomeFilter = result.second.split(" ");
 
@@ -171,7 +167,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
                     if (result.second.contains(macAddress)) {
                         dongleNoti = DongleNoti.BLE_CONNECTED;
-                        dongleState = DongleState.Connect;
+                        dongleState = DongleState.CONNECT;
                         requestThread.checkRetry();
                         //ble connect success
                         GolfzonLogger.i("연결 성공");
@@ -179,14 +175,20 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                     } else {
                         //ble connect fail
                         GolfzonLogger.i("연결 실패");
-                        dongleState = DongleState.Disconnect;
+                        dongleState = DongleState.DISCONNECT;
                         dongleNoti = DongleNoti.BLE_CONNECT_FAIL;
                     }
+                    break;
+                case REQ_SET_DISCONNECTED:
+                    GolfzonLogger.i("스캔 종료..");
+                    requestThread.success(null);
+                    dongleState = DongleState.DISCONNECT;
+                    dongleNoti = DongleNoti.BLE_DISCONNECTED;
                     break;
                 default:
             }
 
-            broadCastDongleState(dongleNoti);
+            broadCastDongleNoti(dongleNoti);
 
         }
 
@@ -204,7 +206,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     }
 
     @Override
-    public void onTimeout() {
-        GolfzonLogger.e("[timeOut] =>>>>> ");
+    public void onTimeout(String packetType) {
+        GolfzonLogger.e("[timeOut] =>>>>> " + packetType);
     }
 }

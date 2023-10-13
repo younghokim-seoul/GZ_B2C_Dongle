@@ -29,7 +29,7 @@ public class RealTimeDataChecker {
     public interface DataCheckerCallback {
         void onDataCheckResult(Pair<String, String> result);
 
-        void onTimeout();
+        void onTimeout(String type);
     }
 
 
@@ -65,7 +65,7 @@ public class RealTimeDataChecker {
                         timeoutMs = -1;
 
                         if (result == null) {
-                            callback.onTimeout();
+                            callback.onTimeout(currentRequest.type);
                         } else {
                             GolfzonLogger.i(":::result " + result.first);
                             notify(result);

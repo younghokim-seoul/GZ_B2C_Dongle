@@ -32,7 +32,6 @@ import androidx.fragment.app.Fragment;
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.DongleManager;
 import com.hoho.android.usbserial.core.DongleNoti;
-import com.hoho.android.usbserial.core.DongleState;
 import com.hoho.android.usbserial.core.SerialDataListener;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
@@ -52,7 +51,6 @@ import java.util.concurrent.Executors;
 import co.golfzon.visionHome.HGSNoti;
 import co.golfzon.visionHome.HGSSensorListener;
 import co.golfzon.visionHome.SwingInfoGyro;
-import co.golfzon.visionHome.core.HGS_ClientManager;
 import co.golfzon.visionHome.core.interfaces.HGS_Client;
 import co.golfzon.visionHome.util.Converter;
 

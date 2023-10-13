@@ -32,6 +32,7 @@ import androidx.fragment.app.Fragment;
 import com.hoho.android.usbserial.GolfzonLogger;
 import com.hoho.android.usbserial.core.DongleManager;
 import com.hoho.android.usbserial.core.DongleNoti;
+import com.hoho.android.usbserial.core.DongleState;
 import com.hoho.android.usbserial.core.SerialDataListener;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
@@ -170,12 +171,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         super.onPause();
     }
 
-    @Override
-    public void onDestroyView() {
-        GolfzonLogger.i(":::onDestroyView");
-//        dongleManager.getResponseManager().stop();
-        super.onDestroyView();
-    }
+
 
     /*
      * UI
@@ -265,6 +261,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                         break;
                     case NOTI_GYRO_DISCONNECTED_ERROR:
                         dongleManager.setDongleState(DongleState.DISCONNECT);
+                        break;
+                    case NOTI_SENSOR_DISCONNECTED:
+                        disposeUsbSerial();
                         break;
                 }
             }
@@ -393,9 +392,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         }
     }
 
-    private void disconnect() {
-        hgsClient.HGSSensingStop();
-
+    private void disposeUsbSerial(){
         connected = false;
         controlLines.stop();
         if (usbIoManager != null) {
@@ -410,7 +407,10 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         usbSerialPort = null;
         dongleManager.setUsbSerialPort(null);
         dongleManager.getRequestThread().closeAll();
-
+    }
+    private void disconnect() {
+        hgsClient.HGSSensingStop();
+        hgsClient.HGSRelease();
     }
 
     private void send(String str) {

@@ -152,13 +152,25 @@ public class DongleManager {
     }
 
     public void setDisconnect() {
-        addQueueReqeustPacket(Feature.REQ_SET_DISCONNECTED, (result, object) -> {
+
+        addQueueReqeustPacket(Feature.REQ_AT_MODE, (result, object) -> {
             GolfzonLogger.e("REQ_AT_MODE >>>>>> " + result);
-            if (requestThread != null) {
-                GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
-                requestThread.checkRetry();
-            }
+
+            addQueueReqeustPacket(Feature.REQ_SET_DISCONNECTED, (res, obj) -> {
+                GolfzonLogger.e("REQ_SET_DISCONNECTED" + res);
+                if(res == ResultCode.SUCCESS){
+                    if (requestThread != null) {
+                        GolfzonLogger.e(">>>>>>>>>>>>>>>>>");
+                        requestThread.checkRetry();
+                    }
+                }else{
+                    requestThread.checkRetry();
+                }
+            }, 3, 500);
+
         }, 3, 3000);
+
+
 
     }
 

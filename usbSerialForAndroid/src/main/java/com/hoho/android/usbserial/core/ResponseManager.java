@@ -54,6 +54,8 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
             String receivedData = new String(data, StandardCharsets.UTF_8);
 
+            GolfzonLogger.i(":::receivedData " +receivedData);
+            GolfzonLogger.i(":::dongleState " + dongleState);
 
             if (dongleState == DongleState.DATA_GATHERING) {
                 //data mode
@@ -106,7 +108,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
                 case REQ_DT_MODE:
                     GolfzonLogger.i("DATA 모드로 전환");
                     dongleNoti = DongleNoti.DT_MODE;
-                    dongleState = DongleState.CONNECT;
+                    dongleState = DongleState.DATA_GATHERING;
                     requestThread.checkRetry();
                     break;
                 case REQ_IS_CONNECTED:

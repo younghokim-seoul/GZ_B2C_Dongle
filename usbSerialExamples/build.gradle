@@ -54,7 +54,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-//    implementation files('libs/hgs_android_sdk_release_1.0.9.jar')
+    implementation files('libs/hgs_android_sdk_release_1.0.9.jar')
 
     implementation project(':usbSerialForAndroid')
     implementation 'androidx.appcompat:appcompat:1.6.1'

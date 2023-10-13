@@ -1,0 +1,14 @@
+<changelist name="Uncommitted_changes_before_rebase_[Changes]1" date="1697201917303" recycled="true" deleted="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_rebase_[Changes]1/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before rebase [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="usbSerialExamples/src/main/jniLibs/x86_64/libAndroidTarget.so" />
+    <option name="AFTER_PATH" value="usbSerialExamples/src/main/jniLibs/x86_64/libAndroidTarget.so" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_rebase_[Changes]1/libAndroidTarget.so" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="usbSerialExamples/libs/hgs_android_sdk_release_1.0.9.jar" />
+    <option name="AFTER_PATH" value="usbSerialExamples/libs/hgs_android_sdk_release_1.0.9.jar" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_rebase_[Changes]1/hgs_android_sdk_release_1.0.9.jar" />
+  </binary>
+</changelist>

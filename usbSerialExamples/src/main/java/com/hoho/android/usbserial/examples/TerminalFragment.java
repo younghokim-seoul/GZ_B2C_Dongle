@@ -331,11 +331,9 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         GolfzonLogger.i(":::::::::::::usb connect call");
         UsbDevice device = null;
         UsbManager usbManager = (UsbManager) getActivity().getSystemService(Context.USB_SERVICE);
-        for (UsbDevice v : usbManager.getDeviceList().values()){
-            GolfzonLogger.i(":::v " + v.getDeviceName()  + " || " + v.getDeviceId());
-            device = v;
-            break;
-        }
+        for(UsbDevice v : usbManager.getDeviceList().values())
+            if(v.getDeviceId() == deviceId)
+                device = v;
 
         if (device == null) {
             status("connection failed: device not found");

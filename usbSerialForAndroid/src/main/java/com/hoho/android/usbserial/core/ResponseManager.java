@@ -54,9 +54,6 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
 
             String receivedData = new String(data, StandardCharsets.UTF_8);
 
-            GolfzonLogger.i(":::receivedData " +receivedData);
-            GolfzonLogger.i(":::dongleState " + dongleState);
-
             if (dongleState == DongleState.DATA_GATHERING) {
                 //data mode
                 if (serialDataListener != null) serialDataListener.onResult(data);
@@ -79,6 +76,7 @@ public class ResponseManager implements SerialInputOutputManager.Listener, RealT
     @Override
     public void onRunError(Exception e) {
         GolfzonLogger.e("[onRunError] error => " + e);
+        dongleState = DongleState.DISCONNECT;
     }
 
 

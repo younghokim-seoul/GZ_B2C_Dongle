@@ -331,9 +331,12 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
         GolfzonLogger.i(":::::::::::::usb connect call");
         UsbDevice device = null;
         UsbManager usbManager = (UsbManager) getActivity().getSystemService(Context.USB_SERVICE);
-        for (UsbDevice v : usbManager.getDeviceList().values())
-            if (v.getDeviceId() == deviceId)
-                device = v;
+        for (UsbDevice v : usbManager.getDeviceList().values()){
+            GolfzonLogger.i(":::v " + v.getDeviceName()  + " || " + v.getDeviceId());
+            device = v;
+            break;
+        }
+
         if (device == null) {
             status("connection failed: device not found");
             return;
@@ -411,6 +414,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
     private void disconnect() {
         hgsClient.HGSSensingStop();
         hgsClient.HGSRelease();
+        dongleManager.setDongleState(DongleState.DISCONNECT);
     }
 
     private void send(String str) {
@@ -525,6 +529,7 @@ public class TerminalFragment extends Fragment implements SerialInputOutputManag
                 mainLooper.postDelayed(runnable, refreshInterval);
             } catch (Exception e) {
                 status("getControlLines() failed: " + e.getMessage() + " -> stopped control line refresh");
+                disconnect();
             }
         }
 
